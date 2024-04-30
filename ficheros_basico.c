@@ -529,6 +529,11 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
             ptr_nivel[nivel_punteros - 1] = (int) ptr;
             indices[nivel_punteros - 1] = (int) indice;
             ptr = bloque_punteros[nivel_punteros - 1][indice];
+
+            #if DEBUG6
+                DEBUG("liberar_bloques_inodo", "Estamos en el bloque %d y saltamos al bloque %d\n", x, y)
+            #endif
+
             nivel_punteros--;
         }
 
@@ -571,8 +576,8 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
     }
 
     #if DEBUG6
-    DEBUG("liberar_bloques_inodo", "total bloques liberados: %d, total_breads: %d, total_bwrites:%d\n",
-          liberados, breads, bwrites)
+        DEBUG("liberar_bloques_inodo", "total bloques liberados: %d, total_breads: %d, total_bwrites:%d\n",
+            liberados, breads, bwrites)
     #endif
 
     return liberados;
