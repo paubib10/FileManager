@@ -1,0 +1,12 @@
+# Ide files
+.vs/*
+.vscode/*
+.idea/*
+
+# Build files
+bin/*
+out/*
+
+# Cmake files
+cmake-build-debug/*
+CmakeLists.txt
