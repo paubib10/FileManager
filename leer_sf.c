@@ -3,10 +3,10 @@
 #include "debug.h"
 
 #define DEBUGSB 1 // Debug superbloque
-#define DEBUG1 1 // Debug nivel 1
-#define DEBUG2 1 // Debug nivel 2
-#define DEBUG3 1 // Debug nvivel 3
-#define DEBUG4 1 // Debug nivel 4
+#define DEBUG1 0 // Debug nivel 1
+#define DEBUG2 0 // Debug nivel 2
+#define DEBUG3 0 // Debug nvivel 3
+#define DEBUG4 0 // Debug nivel 4
 #define DEBUG7 0 // Debug nivel 7
 
 // Funciones 
@@ -146,7 +146,29 @@ int main(int argc, char const *argv[]) {
     leer_inodo(posInode, &inode);
     traducir_bloque_inodo(&inode, 468750, 1);
     printf("\n");
-    #endif
+
+/*     printf("\nDATOS DEL INODO RESERVADO: %d\n", posInode);
+    struct tm *ts;
+    char atime[80];
+    char mtime[80];
+    char ctime[80];
+    inodo_t inodo;
+    leer_inodo(posInode, &inodo);
+    ts = localtime(&inodo.atime);
+    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&inodo.mtime);
+    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&inodo.ctime);
+    strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
+    printf("tipo: %c\n", inodo.tipo);
+    printf("permisos: %d\n", inodo.permisos);
+    printf("atime: %s \nmtime: %s \nctime: %s\n", atime, mtime, ctime);
+    printf("nlinks: %d\n", inodo.nlinks);
+    printf("Tamaño en bytes lógicos: %i\n", inodo.tamEnBytesLog);
+    printf("Número de bloques ocupados: %i\n", inodo.numBloquesOcupados);
+    printf("SB.posPrimerInodoLibre: %i\n", sb.posPrimerInodoLibre);
+ */    
+#endif
 
     #if DEBUG7
     //Mostrar creación directorios y errores
