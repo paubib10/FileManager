@@ -530,7 +530,7 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
             indices[nivel_punteros - 1] = (int) indice;
             ptr = bloque_punteros[nivel_punteros - 1][indice];
             #if DEBUG6
-            DEBUG("liberar_bloques_inodo", "Estamos en el bloque %d y saltamos al bloque %d\n", x, y)
+            DEBUG("liberar_bloques_inodo", "Estamos en el bloque %d y saltamos al bloque %d\n",ptr_nivel ,ptr ) //test si funciona
             #endif
             nivel_punteros--;
         }
