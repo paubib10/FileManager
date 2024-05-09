@@ -539,7 +539,7 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
             liberar_bloque(ptr);
             if ( (nBL-1 - BloqueLiberado) > 2){
             #if DEBUG6
-            DEBUG("liberar_bloques_inodo", "Estamos en el BL %d y saltamos hasta el BL %d\n", BloqueLiberado, nBL-1)
+            DEBUG("liberar_bloques_inodo", "Estamos en el BL %d y saltamos hasta el BL %d\n", BloqueLiberado+1, nBL-1)
             #endif
             }
             #if DEBUG6
