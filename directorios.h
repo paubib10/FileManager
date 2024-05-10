@@ -1,14 +1,26 @@
 #ifndef DIRECTORIOS
 #define DIRECTORIOS
 
+#include "ficheros.h"
+
 #define TAMNOMBRE 60 //tamaño del nombre de directorio o fichero, en Ext2 = 256
 
-#include "ficheros.h"
+#define TAMFILA 100
+#define TAMBUFFER (TAMFILA * 1000)
+
+#define PROFUNDIDAD 32 //profunidad máxima del arbol de directorios
+
+#define CACHE 3
 
 typedef struct {
   char nombre[TAMNOMBRE];
   unsigned int ninodo;
 } entrada_t;
+
+typedef struct {
+    char camino[TAMNOMBRE * PROFUNDIDAD];
+    int p_inodo;
+};
 
 // Error symbols
 #define ERROR_CAMINO_INCORRECTO                         (-1)
@@ -48,5 +60,10 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
  * Show the error message for the given error.
  */
 void mostrar_error_buscar_entrada(int error);
+
+int mi_creat(const char *camino, unsigned char permisos);
+int mi_dir(const char *camino, char *buffer, char tipo);
+int mi_chmod(const char *camino, unsigned char permisos);
+int mi_stat(const char *camino, stat_t *p_stat);
 
 #endif // DIRECTORIOS

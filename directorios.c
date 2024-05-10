@@ -4,41 +4,29 @@
 #define DEBUG7 1
 
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
+
     if (camino[0] != '/') {
-        fprintf(stderr, "Error: el camino debe comenzar con '/'.\n");
         return FALLO;
     }
+    // Localizamos el segundo '/'
+    char *segundo_slash = strchr((camino + 1), '/');
+    strcpy(tipo, "f");
 
-    // Copiamos el camino para no modificar el original
-    char *camino_copia = strdup(camino);
-
-    // Buscamos el segundo '/'
-    char *segundo_slash = strchr(camino_copia + 1, '/');
-
-    if (segundo_slash != NULL) { // Si hay un segundo '/'
-        // Copiamos la parte inicial
-        strncpy(inicial, camino_copia + 1, segundo_slash - camino_copia - 1);
-        inicial[segundo_slash - camino_copia - 1] = '\0'; // Aseguramos que la cadena termine
-
-        // Copiamos la parte final
+    if(segundo_slash) { // Si se ha encontrado el segundo '/'
+        // Inicial = camino - segundo_slah
+        strncpy(inicial, (camino + 1), (strlen(camino)- strlen(segundo_slash)-1));
+        // Final = segundo_slash
         strcpy(final, segundo_slash);
 
-        // Asignamos el tipo
-        *tipo = 'd';
-    } else { // Si no hay un segundo '/'
-        // Copiamos todo el camino en inicial
-        strcpy(inicial, camino_copia + 1);
+        // Comprobamos si es un directorio
+        if(final[0] == '/') strcpy(tipo, "d");
 
-        // La parte final es una cadena vacía
+    } else { // Si no se ha encontrado
+        // Inicial = camino
+        strcpy(inicial, (camino + 1));
+        // Final = vacío
         strcpy(final, "");
-
-        // Asignamos el tipo
-        *tipo = 'f';
     }
-
-    // Liberamos la memoria de la copia del camino
-    free(camino_copia);
-
     return EXITO;
 }
 
@@ -51,8 +39,6 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     char tipo;
     int cant_entradas_inodo, num_entrada_inodo;
 
-    memset(inicial, 0, sizeof(entrada.nombre));
-    memset(final, 0, sizeof(camino_parcial));
     memset(entrada.nombre, 0, sizeof(entrada.nombre));
 
     if(!strcmp(camino_parcial, "/")) {
@@ -61,11 +47,12 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
         *p_inodo = SB.posInodoRaiz;
         *p_entrada = 0;
+
         return EXITO;
     }
 
     // Extraemos el camino
-    if (extraer_camino(camino_parcial, inicial, final, &tipo) == FALLO) {
+    if (extraer_camino(camino_parcial, inicial, final, &tipo) < 0) {
         return ERROR_CAMINO_INCORRECTO;
     }
 
@@ -73,37 +60,41 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
         DEBUG("buscar_entrada", "inicial: %s, final: %s, reservar: %d\n", inicial, final, reservar)
     #endif
 
-    // Leemos el inodo del directorio
-    if (leer_inodo(*p_inodo_dir, &inodo_dir) == FALLO) {
+    // Buscamosla entrada cuyo nombre se encuentra en inicial
+    leer_inodo(*p_inodo_dir, &inodo_dir);
+    if((inodo_dir.permisos & 4) != 4) {
         return ERROR_PERMISO_LECTURA;
     }
 
-    // Inicializamos el buffer de lectura 
-    entrada_t buff_lectura[BLOCKSIZE / sizeof(entrada_t)];
-    memset(buff_lectura, 0, (BLOCKSIZE / sizeof(entrada_t)) * sizeof(entrada_t));
+    memset(entrada.nombre, 0, sizeof(entrada.nombre));
+    entrada_t  buff_lectura [BLOCKSIZE / sizeof(entrada_t)];
+    memset(buff_lectura, 0, BLOCKSIZE);
 
     cant_entradas_inodo = inodo_dir.tamEnBytesLog / sizeof(entrada_t);
     num_entrada_inodo = 0;
 
-    // int offset = 0;
     if(cant_entradas_inodo > 0) {
-        if((inodo_dir.permisos & 4) != 4) {
-            return ERROR_PERMISO_LECTURA;
-        }
+        
         if(mi_read_f(*p_inodo_dir, &entrada, num_entrada_inodo * sizeof(entrada_t), sizeof(entrada_t)) < 0) {
             return ERROR_PERMISO_LECTURA;
         }
 
+        memset(buff_lectura, 0, (BLOCKSIZE / sizeof(entrada_t)) * sizeof(entrada_t));
+
         while(num_entrada_inodo < cant_entradas_inodo && strcmp(inicial, entrada.nombre) != 0) {
+
             num_entrada_inodo++;
-            if(mi_read_f(*p_inodo_dir, &entrada, num_entrada_inodo * sizeof(entrada_t), sizeof(entrada_t)) < 0) 
+            memset(entrada.nombre, 0, sizeof(entrada.nombre));
+
+            if(mi_read_f(*p_inodo_dir, &entrada, num_entrada_inodo * sizeof(entrada_t), sizeof(entrada_t)) < 0) {
                 return ERROR_PERMISO_LECTURA;
+            }
         }
     }
 
-    if(num_entrada_inodo == cant_entradas_inodo && (inicial != buff_lectura[num_entrada_inodo % (BLOCKSIZE / sizeof(entrada_t))].nombre)) {
-        switch (reservar)
-        {
+    if((strcmp(entrada.nombre, inicial) != 0) && (num_entrada_inodo == cant_entradas_inodo)) {
+
+        switch (reservar) {
         case 0: // modo consulta. Como no existe la entrada retornamos error
             return ERROR_NO_EXISTE_ENTRADA_CONSULTA;
             break;
@@ -118,20 +109,22 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                 return ERROR_PERMISO_ESCRITURA;
             } else {
                 strcpy(entrada.nombre, inicial);
+
                 if(tipo == 'd') {
-                    if(strcmp(final, "/")) {
+                    if(strcmp(final, "/") == 0) {
                         // Reservar un nuevo inodo como directorio y asignarlo a la entrada
-                        entrada.ninodo = reservar_inodo(tipo, permisos);
+                        entrada.ninodo = reservar_inodo('d', permisos);
 
                         #if DEBUG7
                             DEBUG("buscar_entrada", "reservado inodo %d tipo %c con permisos %d para '%s'\n", entrada.ninodo, tipo, permisos, entrada.nombre)
                         #endif
+
                     } else { // Cuelgan más directorios o ficheros
                         return ERROR_NO_EXISTE_DIRECTORIO_INTERMEDIO;
                     }
                 } else { // Es un fichero
                     // Reservar un nuevo inodo como fichero y asignarlo a la entrada
-                    entrada.ninodo = reservar_inodo(tipo, permisos);
+                    entrada.ninodo = reservar_inodo('f', permisos);
 
                     #if DEBUG7
                         DEBUG("buscar_entrada", "reservado inodo %d tipo %c con permisos %d para '%s'\n", entrada.ninodo, tipo, permisos, entrada.nombre)
@@ -144,12 +137,13 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                 #endif
 
                 // Escribir la entrada en el directorio padre
-                if(mi_write_f(*p_inodo_dir, &entrada, inodo_dir.tamEnBytesLog, sizeof(entrada_t)) == FALLO) {
+                if(mi_write_f(*p_inodo_dir, &entrada, num_entrada_inodo * sizeof(entrada_t), sizeof(entrada_t)) < 0) {
+
                     if(entrada.ninodo != -1) {
                         liberar_inodo(entrada.ninodo);
-                        #if DEBUG7
+                        /*#if DEBUG7
                             DEBUG("buscar_entrada", "liberado inodo %i, reservado a %s\n", num_entrada_inodo, inicial)
-                        #endif
+                        #endif*/
                     }
                     return FALLO;
                 }
@@ -165,15 +159,17 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
         }
 
         // Cortamos la recursividad
-        *(p_inodo) = num_entrada_inodo; // Asignar a *p_inodo el numero del inodo del directorio o fichero creado o leido
-        *(p_entrada) = entrada.ninodo; // Asignar a *p_entrada el numero de su entrada dentro del último directorio que lo contiene
+        *p_inodo = entrada.ninodo; // Asignar a *p_inodo el numero del inodo del directorio o fichero creado o leido
+        *p_entrada = num_entrada_inodo; // Asignar a *p_entrada el numero de su entrada dentro del último directorio que lo contiene
 
         return EXITO; // 0
-    } else {
 
-        *(p_inodo_dir) = entrada.ninodo; // Asignar a *p_inodo_dir el puntero al inodo que se indica en la entrada encontrada
+    } else {
+        *p_inodo_dir = entrada.ninodo; // Asignar a *p_inodo_dir el puntero al inodo que se indica en la entrada encontrada
         return buscar_entrada(final, p_inodo_dir, p_inodo, p_entrada, reservar, permisos);
     }
+
+    return EXITO;
 }
 
 void mostrar_error_buscar_entrada(int error) {
@@ -191,4 +187,166 @@ void mostrar_error_buscar_entrada(int error) {
     }
 
     fprintf(stderr, RED"Error: %s.\n"RESET, msg);
+}
+
+int mi_creat(const char *camino, unsigned  char permisos) {
+
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+
+    int error;
+
+    if((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 1, permisos)) < 0) {
+        return error;
+    }
+
+    return EXITO;
+}
+
+int mi_dir(const char *camino, char *buffer, char tipo) {
+    struct tm *tm;
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
+    int error, nEntradas = 0;
+    char tmp[100], tamEnBytes[10];
+    entrada_t entrada;
+    inodo_t inodo;
+
+    // Buscar entrada
+    error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 4);
+    if (error < 0) {
+        mostrar_error_buscar_entrada(error);
+        return FALLO;
+    }
+
+    // Leer inodo
+    if (leer_inodo(p_inodo, &inodo) < 0) return FALLO;
+
+    // Comprobar permisos
+    if ((inodo.permisos & 4) != 4) return FALLO;
+
+    // Procesar directorio
+    if (tipo == 'd') {
+        entrada_t entradas[BLOCKSIZE / sizeof(entrada_t)];
+        memset(&entradas, 0, sizeof(entrada_t));
+        nEntradas = inodo.tamEnBytesLog / sizeof(entrada_t);
+        int offset = 0;
+        offset += mi_read_f(p_inodo, entradas, offset, BLOCKSIZE);
+
+        // Leer todas las entradas
+        for (int i = 0; i < nEntradas; i++) {
+            if (leer_inodo(entradas[i % (BLOCKSIZE / sizeof(entrada_t))].ninodo, &inodo) < 0) {
+                return FALLO;
+            }
+
+            // Agregar entrada a buffer
+            // Tipo
+            strcat(buffer, (inodo.tipo == 'd') ? "d" : "f");
+            strcat(buffer, "\t");
+
+            // Permisos
+            strcat(buffer, (inodo.permisos & 4) ? "r" : "-");
+            strcat(buffer, (inodo.permisos & 2) ? "w" : "-");
+            strcat(buffer, (inodo.permisos & 1) ? "x" : "-");
+            strcat(buffer, "\t");
+
+            // mTime
+            tm = localtime(&inodo.mtime);
+            sprintf(tmp, "%d-%02d-%02d %02d:%02d:%02d", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour,
+                    tm->tm_min, tm->tm_sec);
+            strcat(buffer, tmp);
+            strcat(buffer, "\t");
+
+            // Tamaño
+            sprintf(tamEnBytes, "%d", inodo.tamEnBytesLog);
+            strcat(buffer, tamEnBytes);
+            strcat(buffer, "\t");
+
+            // Nombre
+            strcat(buffer, entrada.nombre);
+            while ((strlen(buffer) % TAMFILA) != 0) {
+                strcat(buffer, " ");
+            }
+
+            // Siguiente
+            strcat(buffer, "\n");
+
+            if (offset % (BLOCKSIZE / sizeof(entrada_t)) == 0) {
+                offset += mi_read_f(p_inodo, entradas, offset, BLOCKSIZE);
+            }
+        }
+        return nEntradas;
+    }
+
+    // Procesar archivo
+    mi_read_f(p_inodo_dir, &entrada, sizeof(entrada_t) * p_entrada, sizeof(entrada_t));
+    if (leer_inodo(entrada.ninodo, &inodo) < 0) return FALLO;
+
+    // Agregar entrada a buffer
+    // Tipo
+    strcat(buffer, (inodo.tipo == 'd') ? "d" : "f");
+    strcat(buffer, "\t");
+
+    // Permisos
+    strcat(buffer, (inodo.permisos & 4) ? "r" : "-");
+    strcat(buffer, (inodo.permisos & 2) ? "w" : "-");
+    strcat(buffer, (inodo.permisos & 1) ? "x" : "-");
+    strcat(buffer, "\t");
+
+    // mTime
+    tm = localtime(&inodo.mtime);
+    sprintf(tmp, "%d-%02d-%02d %02d:%02d:%02d", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour,
+            tm->tm_min, tm->tm_sec);
+    strcat(buffer, tmp);
+    strcat(buffer, "\t");
+
+    // Tamaño
+    sprintf(tamEnBytes, "%d", inodo.tamEnBytesLog);
+    strcat(buffer, tamEnBytes);
+    strcat(buffer, "\t");
+
+    // Nombre
+    strcat(buffer, entrada.nombre);
+    while ((strlen(buffer) % TAMFILA) != 0) {
+        strcat(buffer, " ");
+    }
+
+    // Siguiente
+    strcat(buffer, "\n");
+
+    return EXITO; // 0
+}
+
+int mi_chmod(const char *camino, unsigned char permisos) {
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+
+    int error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, permisos);
+
+    if(error < 0) {
+        return error;
+    }
+
+    mi_chmod_f(p_inodo, permisos);
+
+    return EXITO;
+}
+
+int mi_stat(const char *camino, stat_t *p_stat) {
+
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+
+    int error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, p_stat->permisos);
+    if(error < 0) {
+        return error;
+    }
+
+    if(mi_stat_f(p_inodo, p_stat) < 0) {
+        return FALLO;
+    }
+
+    return p_inodo;
 }

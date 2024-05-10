@@ -7,7 +7,7 @@
 #define DEBUG2 0 // Debug nivel 2
 #define DEBUG3 0 // Debug nvivel 3
 #define DEBUG4 0 // Debug nivel 4
-#define DEBUG7 1 // Debug nivel 7
+#define DEBUG7 0 // Debug nivel 7
 
 // Funciones 
 void mostrar_buscar_entrada(char *camino, int reservar);
@@ -147,8 +147,8 @@ int main(int argc, char const *argv[]) {
     traducir_bloque_inodo(&inode, 468750, 1);
     printf("\n");
 
-    printf("\nDATOS DEL INODO RESERVADO: %d\n", posInode);
-    structu tm *ts;
+/*     printf("\nDATOS DEL INODO RESERVADO: %d\n", posInode);
+    struct tm *ts;
     char atime[80];
     char mtime[80];
     char ctime[80];
@@ -167,7 +167,8 @@ int main(int argc, char const *argv[]) {
     printf("Tamaño en bytes lógicos: %i\n", inodo.tamEnBytesLog);
     printf("Número de bloques ocupados: %i\n", inodo.numBloquesOcupados);
     printf("SB.posPrimerInodoLibre: %i\n", sb.posPrimerInodoLibre);
-    #endif
+ */    
+#endif
 
     #if DEBUG7
     //Mostrar creación directorios y errores

@@ -3,7 +3,7 @@
 #include "debug.h"
 
 #define DEBUG3 0 // Debug level 3
-#define DEBUG4 1 // Debug level 4
+#define DEBUG4 0 // Debug level 4
 #define DEBUG6 1 // Debug level 6
 
 int tamMB(unsigned int nbloques) {
@@ -529,17 +529,13 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
             ptr_nivel[nivel_punteros - 1] = (int) ptr;
             indices[nivel_punteros - 1] = (int) indice;
             ptr = bloque_punteros[nivel_punteros - 1][indice];
-<<<<<<< HEAD
 
+            /*
             #if DEBUG6
                 DEBUG("liberar_bloques_inodo", "Estamos en el bloque %d y saltamos al bloque %d\n", x, y)
             #endif
+            */
 
-=======
-            #if DEBUG6
-            DEBUG("liberar_bloques_inodo", "Estamos en el bloque %d y saltamos al bloque %d\n", x, y)
-            #endif
->>>>>>> 3897cdcef2eb7cfa34df21a68872abe9884879a5
             nivel_punteros--;
         }
 
