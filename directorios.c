@@ -188,6 +188,7 @@ void mostrar_error_buscar_entrada(int error) {
 
     fprintf(stderr, RED"Error: %s.\n"RESET, msg);
 }
+<<<<<<< HEAD
 
 int mi_creat(const char *camino, unsigned  char permisos) {
 
@@ -350,3 +351,5 @@ int mi_stat(const char *camino, stat_t *p_stat) {
 
     return p_inodo;
 }
+=======
+>>>>>>> bc1781c79568fc87be9656357e88da15d9f325f7
