@@ -4,19 +4,19 @@
 int main(int argc, char const *argv[]) {
     // Comprobación de sintaxis
     if(argc != 4) {
-        ERR("mi_mkdir", "Sintaxis: ./mi_mkdir <disco> <permisos> </ruta_directorio/>\n")
+        fprintf(stderr,RED"Sintaxis: ./mi_mkdir <disco> <permisos> </ruta_directorio/>\n"RESET);
         return FALLO;
     }
 
     // Comprobación de permisos
     if(atoi(argv[2]) < 0 || atoi(argv[2]) > 7) {
-        ERR("mi_mkdir", "Error: Modo inválido: <<%d>>\n", atoi(argv[2]))
+        fprintf(stderr,RED"Error: Modo inválido: <<%d>>\n"RESET, atoi(argv[2]));
         return FALLO;
     }
 
     // Comprobación de si es un directorio
     if(argv[3][strlen(argv[3]) - 1] != '/') {
-        ERR("mi_mkdir", "Error: No es un directorio.\n")
+        fprintf(stderr,RED"Error: No es un directorio.\n"RESET);
         return FALLO;
     }
 

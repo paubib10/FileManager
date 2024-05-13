@@ -1,10 +1,10 @@
 #include "directorios.h"
 #include "debug.h"
 
-#define DEBUG2 0 // Debug nivel 2
-#define DEBUG3 0 // Debug nivel 3
-#define DEBUG4 0 // Debug nivel 4
-#define DEBUG8 0 // Debug nivel 8
+#define DEBUGGER2 0 // Debug nivel 2
+#define DEBUGGER3 0 // Debug nivel 3
+#define DEBUGGER4 0 // Debug nivel 4
+#define DEBUGGER8 0 // Debug nivel 8
 
 // Funciones 
 void mostrar_buscar_entrada(char *camino, int reservar);
@@ -40,7 +40,7 @@ int main(int argc, char const *argv[]) {
     printf("totBloques = %d\n", sb.totBloques);
     printf("totInodos = %d\n", sb.totInodos);
 
-    #if DEBUG2
+    #if DEBUGGER2
     printf("\nsizeof(struct superbloque) = %ld\n", sizeof(superbloque_t));
     printf("sizeof(struct inodo) = %ld\n", sizeof(inodo_t));
     printf("\nRECORRIDO LISTA ENLAZADA DE INODOS LIBRES\n");
@@ -60,7 +60,7 @@ int main(int argc, char const *argv[]) {
     }
     #endif
 
-    #if DEBUG3
+    #if DEBUGGER3
     printf("RESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS\n");
     int reservado = reservar_bloque();
     if (bread(posSB, &sb) == -1) return FALLO;
@@ -115,7 +115,7 @@ int main(int argc, char const *argv[]) {
     printf("numBloquesOcupados: %d\n", inodoRaiz.numBloquesOcupados);
     #endif
 
-    #if DEBUG4
+    #if DEBUGGER4
     int posInode = reservar_inodo('f', 6);
     bread(posSB, &sb);
 
@@ -165,7 +165,7 @@ int main(int argc, char const *argv[]) {
     printf("SB.posPrimerInodoLibre: %i\n", sb.posPrimerInodoLibre);
     #endif
 
-    #if DEBUG8
+    #if DEBUGGER8
     //Mostrar creación directorios y errores
     mostrar_buscar_entrada("pruebas/", 1);                 //ERROR_CAMINO_INCORRECTO
     mostrar_buscar_entrada("/pruebas/", 0);                //ERROR_NO_EXISTE_ENTRADA_CONSULTA

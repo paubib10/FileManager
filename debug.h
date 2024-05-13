@@ -1,7 +1,3 @@
-//
-// Created by Brouse on 09/04/2024.
-//
-
 #ifndef FILEMANAGER_DEBUG_H
 #define FILEMANAGER_DEBUG_H
 
@@ -26,8 +22,11 @@
 #define NEGRITA "\x1b[1m"
 
 // Debugs levels
-#define DEBUG7 0
-#define DEBUG9 1
+#define DEBUG3 0 // Debug level 3
+#define DEBUG4 0 // Debug level 4
+#define DEBUG6 0 // Debug level 6
+#define DEBUG7 0 // Debug level 7
+#define DEBUG9 0 // Debug level 9
 
 // Debug methods
 #define DEBUG(method, msg, ...) ( \

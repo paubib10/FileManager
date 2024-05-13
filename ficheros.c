@@ -7,12 +7,12 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     inodo_t inodo;
     // Read and check inode permissions
     if (leer_inodo(ninodo, &inodo) < 0) {
-        ERR("mi_write_f", "No se ha podido leer el inodo");
+        ERR("mi_write_f", "No se ha podido leer el inodo")
         return FALLO;
     }
 
     if((inodo.permisos & 2) != 2) {
-        ERR("mi_write_f", "Error: No hay permisos de escritura");
+        fprintf(stderr,RED"Error: No hay permisos de escritura\n"RESET);
         return FALLO;
     }
 

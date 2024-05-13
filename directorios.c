@@ -1,6 +1,9 @@
 #include "directorios.h"
 #include "debug.h"
 
+ultimaEntrada_t ultimaEntrada[CACHE];
+int MAXCACHE = CACHE;
+
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
 
     if (camino[0] != '/') {
@@ -357,3 +360,246 @@ int mi_stat(const char *camino, stat_t *p_stat) {
 
     return p_inodo;
 }
+
+// Función para escribir en un archivo
+int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+    int bytesEscritos = 0;
+    int error = 0;
+    int esta = 0;
+
+    // Buscar en la caché
+    for(int i = 0; i < (MAXCACHE - 1); i++) {
+        if(strcmp(camino, ultimaEntrada[i].camino) == 0) {
+            p_inodo = ultimaEntrada[i].p_inodo;
+            esta = 1;
+
+            #if DEBUG9
+                fprintf(stderr,CYAN"mi_write() -> Utilizamos la caché de lectura en vez de llamar a buscar_entrada()\n" RESET);
+            #endif
+            break;
+        }
+    }
+
+    // Si no está en la caché, buscar la entrada
+    if(!esta) {
+        error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 4); // 4 -> Permisos de lectura
+        if(error < 0) {
+            return error;
+        }
+
+        // Actualizar la caché
+        if (MAXCACHE > 0) {
+            strcpy(ultimaEntrada[CACHE - MAXCACHE].camino, camino);
+            ultimaEntrada[CACHE - MAXCACHE].p_inodo = p_inodo;
+            --MAXCACHE;
+            #if DEBUG9
+                fprintf(stderr,ORANGE "mi_write() -> Actualizamos la caché de escritura\n" RESET);
+            #endif
+
+        } else {
+            for(int i = 0; i < CACHE - 1; i++) {
+                strcpy(ultimaEntrada[i].camino, ultimaEntrada[i + 1].camino);
+                ultimaEntrada[i].p_inodo = ultimaEntrada[i + 1].p_inodo;
+            }
+            strcpy(ultimaEntrada[CACHE - 1].camino, camino);
+            ultimaEntrada[CACHE - 1].p_inodo = p_inodo;
+
+            #if DEBUG9
+                fprintf(stderr,ORANGE "mi_write() -> Actualizamos la caché de escritura\n" RESET);
+            #endif
+        }
+    }
+
+    // Escribir en el archivo
+    bytesEscritos = mi_write_f(p_inodo, buf, offset, nbytes);
+    if(bytesEscritos < 0) {
+        bytesEscritos = 0;
+    }
+
+    return bytesEscritos;
+}
+
+// Función para leer de un archivo
+int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nbytes) {
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+    int error = 0;
+    int esta = 0;
+    int bytesLeidos = 0;
+
+    // Buscar en la caché
+    for(int i = 0; i < (MAXCACHE - 1); i++) {
+        if(strcmp(camino, ultimaEntrada[i].camino) == 0) {
+            p_inodo = ultimaEntrada[i].p_inodo;
+            esta = 1;
+
+            #if DEBUG9
+                fprintf(stderr,CYAN"\nmi_read() -> Utilizamos la caché de lectura en vez de llamar a buscar_entrada()\n" RESET);
+            #endif
+            break;
+        }
+    }
+
+    // Si no está en la caché, buscar la entrada
+    if(!esta) {
+        error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 4);
+        if(error < 0) {
+            return error;
+        }
+
+        // Actualizar la caché
+        if(MAXCACHE > 0) {
+            strcpy(ultimaEntrada[CACHE - MAXCACHE].camino, camino);
+            ultimaEntrada[CACHE - MAXCACHE].p_inodo = p_inodo;
+            --MAXCACHE;
+
+            #if DEBUG9
+                fprintf(stderr,ORANGE"mi_read() -> Actualizamos la caché de lectura\n" RESET);
+            #endif
+
+        } else {  //Remplazamos FIFO
+            for(int i = 0; i < CACHE - 1; i++) {
+                strcpy(ultimaEntrada[i].camino, ultimaEntrada[i + 1].camino);
+                ultimaEntrada[i].p_inodo = ultimaEntrada[i + 1].p_inodo;
+            }
+            strcpy(ultimaEntrada[CACHE - 1].camino, camino);
+            ultimaEntrada[CACHE - 1].p_inodo = p_inodo;
+
+            #if DEBUG9
+                fprintf(stderr,ORANGE"mi_read() -> Actualizamos la caché de lectura\n" RESET);
+            #endif
+        }
+    }
+
+    // Leer el archivo
+    bytesLeidos = mi_read_f(p_inodo, buf, offset, nbytes);
+    if(bytesLeidos < 0) {
+        return ERROR_PERMISO_LECTURA;
+    }
+
+    return bytesLeidos;
+}
+
+int mi_link(const char *camino1, const char *camino2) {
+    // Variables para almacenar los resultados de buscar_entrada
+    unsigned int p_inodo_dir1 = 0, p_inodo1 = 0, p_entrada1 = 0;
+    unsigned int p_inodo_dir2 = 0, p_inodo2 = 0, p_entrada2 = 0;
+    inodo_t inodo;
+    int error;
+
+    // Buscar la entrada para el camino 1
+    error = buscar_entrada(camino1, &p_inodo_dir1, &p_inodo1, &p_entrada1, 0, 4);
+    if(error < 0) {
+        mostrar_error_buscar_entrada(error);
+        return FALLO;
+    }
+
+    // Leer el inodo y comprobar si es un fichero y si tiene permisos de lectura
+    leer_inodo(p_inodo1, &inodo);
+    if(inodo.tipo != 'f' || (inodo.permisos & 4) != 4) {
+        return (inodo.tipo != 'f') ? ERROR_CAMINO_INCORRECTO : ERROR_PERMISO_LECTURA;
+    }
+
+    // Buscar la entrada para el camino 2
+    error = buscar_entrada(camino2, &p_inodo_dir2, &p_inodo2, &p_entrada2, 1, 6);
+    if(error < 0) {
+        mostrar_error_buscar_entrada(error);
+        return FALLO;
+    }
+
+    // Leer la entrada del directorio para el camino 2
+    entrada_t entrada2;
+    if(mi_read_f(p_inodo_dir2, &entrada2, sizeof(entrada_t) * (p_entrada2), sizeof(entrada_t)) < 0) {
+        return FALLO;
+    }
+
+    // Crear el enlace y escribir la entrada
+    entrada2.ninodo = p_inodo1;
+
+    // Incrementar el número de enlaces
+    inodo.nlinks++;
+    inodo.ctime = time(NULL);
+    if(escribir_inodo(p_inodo1, &inodo) < 0) {
+        return FALLO;
+    }
+
+    if(mi_write_f(p_inodo_dir2, &entrada2, sizeof(entrada_t) * (p_entrada2), sizeof(entrada_t)) < 0) {
+        return FALLO;
+    }
+
+    // Liberar el inodo y actualizar la metainformación
+    if(liberar_inodo(p_inodo2) < 0 || escribir_inodo(p_inodo1, &inodo) < 0) {
+        return FALLO;
+    }
+
+    return EXITO;
+}
+
+int mi_unlink(const char *camino) {
+    // Variables para almacenar los resultados de buscar_entrada y leer_inodo
+    superbloque_t SB;
+    bread(posSB, &SB);
+    unsigned int p_inodo_dir = SB.posInodoRaiz, p_inodo = SB.posInodoRaiz;
+    unsigned int p_entrada = 0;
+    inodo_t inodo, inodo_dir;
+    int error;
+
+    // Buscar la entrada para el camino
+    if((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 4)) < 0) {
+        mostrar_error_buscar_entrada(error);
+        return FALLO;
+    }
+
+    // Leer el inodo y comprobar si es un directorio no vacío
+    if(leer_inodo(p_inodo, &inodo) < 0 || (inodo.tipo == 'd' && inodo.tamEnBytesLog > 0)) {
+        fprintf(stderr, RED"Error: El directorio %s no está vacío\n"RESET, camino);
+        return FALLO;
+    }
+
+    // Leer el inodo del directorio
+    if(leer_inodo(p_inodo_dir, &inodo_dir) < 0) {
+        return FALLO;
+    }
+
+    // Si la entrada no es la última, mover la última entrada a su lugar
+    int num_entrada = inodo_dir.tamEnBytesLog / sizeof(entrada_t);
+    if(p_entrada != num_entrada - 1) {
+        entrada_t entrada;
+        if(mi_read_f(p_inodo_dir, &entrada, sizeof(entrada_t) * (num_entrada - 1), sizeof(entrada_t)) < 0) {
+            return FALLO;
+        }
+        if(mi_write_f(p_inodo_dir, &entrada, sizeof(entrada_t) * (p_entrada), sizeof(entrada_t)) < 0) {
+            return FALLO;
+        }
+    }
+
+    // Truncar el fichero del directorio y disminuir el número de enlaces
+    if(mi_truncar_f(p_inodo_dir, sizeof(entrada_t) * (num_entrada - 1)) < 0) {
+        return FALLO;
+    }
+
+    inodo.nlinks--;
+
+    // Si no quedan enlaces, liberar el inodo, de lo contrario, actualizar la metainformación
+    if(!inodo.nlinks) {
+        if (liberar_inodo(p_inodo) < 0) {
+            return FALLO;
+        }
+    } else {
+        inodo.ctime = time(NULL);
+        if(escribir_inodo(p_inodo, &inodo) < 0) {
+            return FALLO;
+        }
+    }
+
+    return EXITO;
+}
+
+
+
+
+

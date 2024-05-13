@@ -1,7 +1,3 @@
-//
-// Created by Brouse on 15/02/2024.
-//
-
 #include "bloques.h"
 
 static int descriptor = 0;

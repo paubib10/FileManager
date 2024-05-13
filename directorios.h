@@ -20,7 +20,7 @@ typedef struct {
 typedef struct {
     char camino[TAMNOMBRE * PROFUNDIDAD];
     int p_inodo;
-};
+} ultimaEntrada_t;
 
 // Error symbols
 #define ERROR_CAMINO_INCORRECTO                         (-1)
@@ -60,10 +60,13 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
  * Show the error message for the given error.
  */
 void mostrar_error_buscar_entrada(int error);
-
 int mi_creat(const char *camino, unsigned char permisos);
 int mi_dir(const char *camino, char *buffer, char tipo);
 int mi_chmod(const char *camino, unsigned char permisos);
 int mi_stat(const char *camino, stat_t *p_stat);
+int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes);
+int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nbytes);
+int mi_link(const char *camino1, const char *camino2);
+int mi_unlink(const char *camino);
 
 #endif // DIRECTORIOS
