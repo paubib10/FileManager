@@ -2,7 +2,6 @@
 #include "debug.h"
 
 #define tamBuffer 1500
-#define DEBUG 1
 
 int main(int argc, char** argv) {
 
@@ -53,9 +52,8 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    #if DEBUG
-        fprintf(stderr, "total_bytesleidos: %d\ntamEnBytesLog: %d\n", bytesLeidos, inodo.tamEnBytesLog);
-    #endif
+    fprintf(stderr, "total_leidos: %d\n", bytesLeidos);
+    fprintf(stderr, "tamEnBytesLog: %d\n", inodo.tamEnBytesLog);
 
     if (bumount() == FALLO) {
         ERR("leer", "Error unmounting the device\n")

@@ -511,9 +511,8 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
     #if DEBUG6
         DEBUG("liberar_bloques_inodo", "primerBL: %d, ultimoBL: %d\n", primerBL, ultimoBL)
     #endif
-    unsigned ptr = 0;
 
-    unsigned int BloqueLiberado = 0;
+    unsigned ptr = 0;
 
     for (unsigned nBL = primerBL; nBL <= ultimoBL; nBL++) {
         nRangoBL = obtener_nrangoBL(*inodo, nBL, &ptr);
@@ -532,31 +531,17 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
             ptr_nivel[nivel_punteros - 1] = (int) ptr;
             indices[nivel_punteros - 1] = (int) indice;
             ptr = bloque_punteros[nivel_punteros - 1][indice];
-<<<<<<< HEAD
 
-            /*
-            #if DEBUG6
-                DEBUG("liberar_bloques_inodo", "Estamos en el bloque %d y saltamos al bloque %d\n", x, y)
-            #endif
-            */
-
-=======
->>>>>>> bc1781c79568fc87be9656357e88da15d9f325f7
             nivel_punteros--;
         }
 
         if (ptr > 0) {
             liberar_bloque(ptr);
-            if ( (nBL-1 - BloqueLiberado) > 2){
-            #if DEBUG6
-            DEBUG("liberar_bloques_inodo", "Estamos en el BL %d y saltamos hasta el BL %d\n", BloqueLiberado+1, nBL-1)
-            #endif
-            }
             #if DEBUG6
                 DEBUG("liberar_bloques_inodo", "liberado BF %d de datos para BL %d\n", ptr, nBL)
             #endif
             liberados++;
-            BloqueLiberado = nBL;
+
             if (nRangoBL == 0) {
                 inodo->punterosDirectos[nBL] = 0;
             } else {
@@ -568,6 +553,7 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
                     ptr = ptr_nivel[nivel_punteros - 1];
 
                     if (memcmp(bloque_punteros[nivel_punteros - 1], buf_punteros, BLOCKSIZE) == 0) {
+
                         liberar_bloque(ptr);
                         #if DEBUG6
                         DEBUG("liberar_bloques_inodo", "liberado BF %i de punteros_nivel%i correspondiente al BL %i\n",
@@ -576,7 +562,6 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
                         liberados++;
 
                         if(nivel_punteros == nRangoBL) inodo->punterosIndirectos[nRangoBL - 1] = 0;
-
                         nivel_punteros++;
                     } else {
                         bwrite(ptr, bloque_punteros[nivel_punteros - 1]);

@@ -1,13 +1,10 @@
-//#include "ficheros_basico.h"
 #include "directorios.h"
 #include "debug.h"
 
-#define DEBUGSB 1 // Debug superbloque
-#define DEBUG1 0 // Debug nivel 1
 #define DEBUG2 0 // Debug nivel 2
-#define DEBUG3 0 // Debug nvivel 3
+#define DEBUG3 0 // Debug nivel 3
 #define DEBUG4 0 // Debug nivel 4
-#define DEBUG7 0 // Debug nivel 7
+#define DEBUG8 0 // Debug nivel 8
 
 // Funciones 
 void mostrar_buscar_entrada(char *camino, int reservar);
@@ -29,7 +26,6 @@ int main(int argc, char const *argv[]) {
         return EXIT_FAILURE;
     }
 
-    #if DEBUGSB
     printf("DATOS DEL SUPERBLOQUE\n");
     printf("posPrimerBloqueMB = %d\n", sb.posPrimerBloqueMB);
     printf("posUltimoBloqueMB = %d\n", sb.posUltimoBloqueMB);
@@ -43,14 +39,10 @@ int main(int argc, char const *argv[]) {
     printf("cantInodosLibres = %d\n", sb.cantInodosLibres);
     printf("totBloques = %d\n", sb.totBloques);
     printf("totInodos = %d\n", sb.totInodos);
-    #endif
-
-    #if DEBUG1
-    printf("\nsizeof(struct superbloque) = %ld\n", sizeof(superbloque_t));
-    printf("sizeof(struct inodo) = %ld\n", sizeof(inodo_t));
-    #endif
 
     #if DEBUG2
+    printf("\nsizeof(struct superbloque) = %ld\n", sizeof(superbloque_t));
+    printf("sizeof(struct inodo) = %ld\n", sizeof(inodo_t));
     printf("\nRECORRIDO LISTA ENLAZADA DE INODOS LIBRES\n");
     inodo_t inodos[BLOCKSIZE / INODOSIZE];
     int countInodos = 0;
@@ -98,7 +90,8 @@ int main(int argc, char const *argv[]) {
     printf("[leer_bit(%d)] = %d\n", sb.posUltimoBloqueDatos, bit);
 
     printf("\nDATOS DEL DIRECTORIO RAIZ\n");
-    struct tm *ts;
+
+    struct tm *tm;
     char atime[80];
     char mtime[80];
     char ctime[80];
@@ -106,12 +99,12 @@ int main(int argc, char const *argv[]) {
     inodo_t inodoRaiz;
     int ninodo = 0;
     leer_inodo(ninodo, &inodoRaiz);
-    ts = localtime(&inodoRaiz.atime);
-    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", ts);
-    ts = localtime(&inodoRaiz.mtime);
-    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S", ts);
-    ts = localtime(&inodoRaiz.ctime);
-    strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
+    tm = localtime(&inodoRaiz.atime);
+    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", tm);
+    tm = localtime(&inodoRaiz.mtime);
+    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S", tm);
+    tm = localtime(&inodoRaiz.ctime);
+    strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", tm);
     printf("tipo: %c\n", inodoRaiz.tipo);
     printf("permisos: %d\n", inodoRaiz.permisos);
     printf("atime: %s\n", atime);
@@ -147,30 +140,32 @@ int main(int argc, char const *argv[]) {
     traducir_bloque_inodo(&inode, 468750, 1);
     printf("\n");
 
-/*     printf("\nDATOS DEL INODO RESERVADO: %d\n", posInode);
+    printf("\nDATOS DEL INODO RESERVADO: %d\n", posInode);
     struct tm *ts;
     char atime[80];
     char mtime[80];
     char ctime[80];
-    inodo_t inodo;
-    leer_inodo(posInode, &inodo);
-    ts = localtime(&inodo.atime);
-    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", ts);
-    ts = localtime(&inodo.mtime);
-    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S", ts);
-    ts = localtime(&inodo.ctime);
-    strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
-    printf("tipo: %c\n", inodo.tipo);
-    printf("permisos: %d\n", inodo.permisos);
-    printf("atime: %s \nmtime: %s \nctime: %s\n", atime, mtime, ctime);
-    printf("nlinks: %d\n", inodo.nlinks);
-    printf("Tamaño en bytes lógicos: %i\n", inodo.tamEnBytesLog);
-    printf("Número de bloques ocupados: %i\n", inodo.numBloquesOcupados);
-    printf("SB.posPrimerInodoLibre: %i\n", sb.posPrimerInodoLibre);
- */    
-#endif
 
-    #if DEBUG7
+    ts = localtime(&inode.atime);
+    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", ts);
+
+    ts = localtime(&inode.mtime);
+    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S", ts);
+
+    ts = localtime(&inode.ctime);
+    strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
+
+    printf("tipo: %c\n", inode.tipo);
+    printf("permisos: %d\n", inode.permisos);
+    printf("atime: %s \nmtime: %s \nctime: %s\n", atime, mtime, ctime);
+    printf("nlinks: %d\n", inode.nlinks);
+    printf("Tamaño en bytes lógicos: %i\n", inode.tamEnBytesLog);
+    printf("Número de bloques ocupados: %i\n", inode.numBloquesOcupados);
+
+    printf("SB.posPrimerInodoLibre: %i\n", sb.posPrimerInodoLibre);
+    #endif
+
+    #if DEBUG8
     //Mostrar creación directorios y errores
     mostrar_buscar_entrada("pruebas/", 1);                 //ERROR_CAMINO_INCORRECTO
     mostrar_buscar_entrada("/pruebas/", 0);                //ERROR_NO_EXISTE_ENTRADA_CONSULTA

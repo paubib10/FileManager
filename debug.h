@@ -26,6 +26,8 @@
 #define NEGRITA "\x1b[1m"
 
 // Debugs levels
+#define DEBUG7 0
+#define DEBUG9 1
 
 // Debug methods
 #define DEBUG(method, msg, ...) ( \
