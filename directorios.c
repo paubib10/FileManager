@@ -1,5 +1,6 @@
 #include "directorios.h"
 #include "debug.h"
+#include "ficheros_basico.h"
 
 ultimaEntrada_t ultimaEntrada[CACHE];
 int MAXCACHE = CACHE;
@@ -361,6 +362,7 @@ int mi_stat(const char *camino, stat_t *p_stat) {
     return p_inodo;
 }
 
+<<<<<<< HEAD
 // Función para escribir en un archivo
 int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
     unsigned int p_inodo_dir = 0;
@@ -417,11 +419,30 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
     bytesEscritos = mi_write_f(p_inodo, buf, offset, nbytes);
     if(bytesEscritos < 0) {
         bytesEscritos = 0;
+=======
+int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
+    unsigned char permisos = 6; // permisos de lectura y escritura
+
+    // Buscamos la entrada
+    int entrada = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, permisos);
+    if (entrada < 0) {
+        fprintf(stderr, "Error al buscar la entrada: %s\n", camino);
+        return -1;
+    }
+
+    // Escribimos en el fichero
+    int bytesEscritos = mi_write_f(p_inodo, buf, offset, nbytes);
+    if (bytesEscritos < 0) {
+        fprintf(stderr, "Error al escribir en el fichero\n");
+        return -1;
+>>>>>>> db3cda11c9bdb603698c05d20831f34d8f2fb67a
     }
 
     return bytesEscritos;
 }
 
+<<<<<<< HEAD
 // Función para leer de un archivo
 int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nbytes) {
     unsigned int p_inodo_dir = 0;
@@ -479,12 +500,31 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
     bytesLeidos = mi_read_f(p_inodo, buf, offset, nbytes);
     if(bytesLeidos < 0) {
         return ERROR_PERMISO_LECTURA;
+=======
+int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nbytes) {
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
+    unsigned char permisos = 4; // permisos de lectura
+
+    // Buscamos la entrada
+    int entrada = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, permisos);
+    if (entrada < 0) {
+        fprintf(stderr, "Error al buscar la entrada: %s\n", camino);
+        return -1;
+    }
+
+    // Leemos del fichero
+    int bytesLeidos = mi_read_f(p_inodo, buf, offset, nbytes);
+    if (bytesLeidos < 0) {
+        fprintf(stderr, "Error al leer del fichero\n");
+        return -1;
+>>>>>>> db3cda11c9bdb603698c05d20831f34d8f2fb67a
     }
 
     return bytesLeidos;
 }
 
 int mi_link(const char *camino1, const char *camino2) {
+<<<<<<< HEAD
     // Variables para almacenar los resultados de buscar_entrada
     unsigned int p_inodo_dir1 = 0, p_inodo1 = 0, p_entrada1 = 0;
     unsigned int p_inodo_dir2 = 0, p_inodo2 = 0, p_entrada2 = 0;
@@ -603,3 +643,135 @@ int mi_unlink(const char *camino) {
 
 
 
+=======
+    unsigned int p_inodo_dir1 = 0, p_inodo1 = 0, p_entrada1 = 0;
+    unsigned int p_inodo_dir2 = 0, p_inodo2 = 0, p_entrada2 = 0;
+    unsigned char permisos = 6; // permisos de lectura y escritura
+
+    // Buscamos la entrada para camino1
+    int entrada1 = buscar_entrada(camino1, &p_inodo_dir1, &p_inodo1, &p_entrada1, 0, permisos);
+    if (entrada1 < 0) {
+        fprintf(stderr, "Error al buscar la entrada: %s\n", camino1);
+        return -1;
+    }
+
+    // Creamos la entrada para camino2
+    int entrada2 = buscar_entrada(camino2, &p_inodo_dir2, &p_inodo2, &p_entrada2, 1, permisos);
+    if (entrada2 < 0) {
+        fprintf(stderr, "Error al crear la entrada: %s\n", camino2);
+        return -1;
+    }
+
+    // Leemos la entrada creada correspondiente a camino2
+    struct entrada_t p_entrada;
+    if (mi_read_f(p_inodo_dir2, &p_entrada, p_entrada2 * sizeof(struct entrada_t), sizeof(struct entrada_t)) == -1) {
+        fprintf(stderr, "Error al leer la entrada: %s\n", camino2);
+        return -1;
+    }
+
+    // Creamos el enlace: Asociamos a esta entrada el mismo inodo que el asociado a la entrada de camino1
+    p_entrada.inodo = p_inodo1;
+
+    // Escribimos la entrada modificada en p_inodo_dir2
+    if (mi_write_f(p_inodo_dir2, &p_entrada, p_entrada2 * sizeof(struct entrada_t), sizeof(struct entrada_t)) == -1) {
+        fprintf(stderr, "Error al escribir la entrada: %s\n", camino2);
+        return -1;
+    }
+
+    // Liberamos el inodo que se ha asociado a la entrada creada, p_inodo2
+    if (liberar_inodo(p_inodo2) == -1) {
+        fprintf(stderr, "Error al liberar el inodo\n");
+        return -1;
+    }
+
+    // Incrementamos la cantidad de enlaces (nlinks) de p_inodo1, actualizamos el ctime y lo salvamos
+    struct inodo_t p_inodo;
+    if (leer_inodo(p_inodo1, &p_inodo) == -1) {
+        fprintf(stderr, "Error al leer el inodo\n");
+        return -1;
+    }
+
+    p_inodo.nlinks++;
+    p_inodo.ctime = time(NULL);
+
+    if (escribir_inodo(p_inodo1, &p_inodo) == -1) {
+        fprintf(stderr, "Error al escribir el inodo\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+int mi_unlink(const char *camino) {
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
+    unsigned char permisos = 6; // permisos de lectura y escritura
+
+    // Buscamos la entrada para camino
+    int entrada = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, permisos);
+    if (entrada < 0) {
+        fprintf(stderr, "Error al buscar la entrada: %s\n", camino);
+        return -1;
+    }
+
+    struct inodo_t inodo;
+    if (leer_inodo(p_inodo, &inodo) == -1) {
+        fprintf(stderr, "Error al leer el inodo\n");
+        return -1;
+    }
+
+    // Si es un directorio y no está vacío, no se puede borrar
+    if ((inodo.tipo == 'd') && (inodo.tamEnBytesLog > 0)) {
+        fprintf(stderr, "Error: el directorio no está vacío\n");
+        return -1;
+    }
+
+    // Obtenemos el número de entradas que tiene el directorio
+    int num_entradas = inodo.tamEnBytesLog / sizeof(struct entrada_t);
+
+    // Si la entrada a eliminar es la última, truncamos el inodo
+    if (p_entrada == num_entradas - 1) {
+        if (mi_truncar_f(p_inodo_dir, inodo.tamEnBytesLog - sizeof(struct entrada_t)) == -1) {
+            fprintf(stderr, "Error al truncar el inodo\n");
+            return -1;
+        }
+    } else {
+        // Si no es la última entrada, leemos la última y la escribimos en la posición de la entrada a eliminar
+        struct entrada_t ultima_entrada;
+        if (mi_read_f(p_inodo_dir, &ultima_entrada, (num_entradas - 1) * sizeof(struct entrada_t), sizeof(struct entrada_t)) == -1) {
+            fprintf(stderr, "Error al leer la última entrada\n");
+            return -1;
+        }
+
+        if (mi_write_f(p_inodo_dir, &ultima_entrada, p_entrada * sizeof(struct entrada_t), sizeof(struct entrada_t)) == -1) {
+            fprintf(stderr, "Error al escribir la entrada\n");
+            return -1;
+        }
+
+        // Truncamos el inodo
+        if (mi_truncar_f(p_inodo_dir, inodo.tamEnBytesLog - sizeof(struct entrada_t)) == -1) {
+            fprintf(stderr, "Error al truncar el inodo\n");
+            return -1;
+        }
+    }
+
+    // Decrementamos el número de enlaces
+    inodo.nlinks--;
+
+    // Si no quedan enlaces, liberamos el inodo
+    if (inodo.nlinks == 0) {
+        if (liberar_inodo(p_inodo) == -1) {
+            fprintf(stderr, "Error al liberar el inodo\n");
+            return -1;
+        }
+    } else {
+        // Actualizamos el ctime y escribimos el inodo
+        inodo.ctime = time(NULL);
+        if (escribir_inodo(p_inodo, &inodo) == -1) {
+            fprintf(stderr, "Error al escribir el inodo\n");
+            return -1;
+        }
+    }
+
+    return 0;
+}
+>>>>>>> db3cda11c9bdb603698c05d20831f34d8f2fb67a
