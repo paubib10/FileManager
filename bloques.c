@@ -1,6 +1,8 @@
 #include "bloques.h"
+#include "semaforo_mutex_posix.h"
 
 static int descriptor = 0;
+ static sem_t *mutex;
 
 int bmount(const char* camino) {
     // If file is already open, close it
@@ -20,11 +22,19 @@ int bumount() {
     // Close the file
     int res = close(descriptor);
 
+     if (!mutex) { // el semáforo es único en el sistema y sólo se ha de inicializar 1 vez (padre)
+       mutex = initSem(); 
+       if (mutex == SEM_FAILED) {
+           return -1;
+       }
+    }
+
+
     if (res == -1) {
         perror("Error");
         return FALLO;
     }
-
+    deleteSem();
     return res;
 }
 
@@ -67,4 +77,14 @@ int bread(unsigned int nbloque, void *buf) {
 
     return (int) res;
 }
+
+void mi_waitSem() {
+       waitSem(mutex);
+}
+
+
+void mi_signalSem() {
+       signalSem(mutex);
+}
+
 

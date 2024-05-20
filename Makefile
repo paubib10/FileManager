@@ -1,34 +1,30 @@
 CC=gcc
 CFLAGS=-c -g -Wall -std=gnu99
-#LDFLAGS=-pthread
+LDFLAGS=-pthread
 
-INCLUDES=bloques.h ficheros_basico.h ficheros.h directorios.h #semaforo_mutex_posix.h #simulacion.h
-PROGRAMS=mi_mkfs leer_sf escribir leer permitir truncar mi_mkdir mi_chmod mi_ls mi_stat mi_touch mi_link mi_rm mi_escribir mi_cat mi_escribir_varios #simulacion verificacion
 
-# Map the programs and libraries to the sources
-LIBRARIES=$(INCLUDES:.h=.o)
-SOURCES=$(addsuffix .c, $(PROGRAMS)) $(INCLUDES:.h=.c)
+SOURCES=mi_mkfs.c bloques.c ficheros_basico.c leer_sf.c ficheros.c  directorios.c mi_mkdir.c mi_touch.c mi_ls.c mi_chmod.c mi_stat.c mi_escribir.c mi_cat.c  mi_link.c mi_rm.c semaforo_mutex_posix.c simulacion.c verificacion.c 
+LIBRARIES=bloques.o ficheros_basico.o ficheros.o directorios.o semaforo_mutex_posix.o
+INCLUDES=bloques.h ficheros_basico.h ficheros.h directorios.h semaforo_mutex_posix.h simulacion.h verificacion.h
+PROGRAMS=mi_mkfs leer_sf  mi_mkdir mi_touch mi_ls mi_chmod mi_stat mi_escribir 
+ mi_cat mi_link mi_rm simulacion verificacion 
+
+
 OBJS=$(SOURCES:.c=.o)
 
-all: install $(OBJS) $(PROGRAMS)
+
+all: $(OBJS) $(PROGRAMS)
+
 
 $(PROGRAMS): $(LIBRARIES) $(INCLUDES)
-	@if [ -f bin/$@.o ]; then \
-		$(CC) $(LDFLAGS) $(addprefix bin/,$(LIBRARIES)) bin/$@.o -o out/$@; \
-	else \
-		echo "No se puede encontrar el archivo bin/$@.o"; \
-	fi
+  $(CC) $(LDFLAGS) $(LIBRARIES) $@.o -o $@
+
 
 %.o: %.c $(INCLUDES)
-	@if [ -f $< ]; then \
-		$(CC) $(CFLAGS) -o bin/$@ -c $<; \
-	else \
-		echo "No se puede encontrar el archivo de origen $<"; \
-	fi
+  $(CC) $(CFLAGS) -o $@ -c $<
 
-install:
-	mkdir -p bin/ out/
 
 .PHONY: clean
 clean:
-	rm -rf bin/* out/* disco* ext*
+  rm -rf *.o *~ $(PROGRAMS) disco* ext* res*
+
