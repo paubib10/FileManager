@@ -1,8 +1,8 @@
 CC=gcc
 CFLAGS=-c -g -Wall -std=gnu99
-#LDFLAGS=-pthread
+LDFLAGS=-pthread
 
-INCLUDES=bloques.h ficheros_basico.h ficheros.h directorios.h #semaforo_mutex_posix.h #simulacion.h
+INCLUDES=bloques.h ficheros_basico.h ficheros.h directorios.h semaforo_mutex_posix.h #simulacion.h
 PROGRAMS=mi_mkfs leer_sf escribir leer permitir truncar mi_mkdir mi_chmod mi_ls mi_stat mi_touch mi_link mi_rm mi_escribir mi_cat mi_escribir_varios #simulacion verificacion
 
 # Map the programs and libraries to the sources
@@ -13,18 +13,10 @@ OBJS=$(SOURCES:.c=.o)
 all: install $(OBJS) $(PROGRAMS)
 
 $(PROGRAMS): $(LIBRARIES) $(INCLUDES)
-	@if [ -f bin/$@.o ]; then \
-		$(CC) $(LDFLAGS) $(addprefix bin/,$(LIBRARIES)) bin/$@.o -o out/$@; \
-	else \
-		echo "No se puede encontrar el archivo bin/$@.o"; \
-	fi
+	$(CC) $(LDFLAGS) $(addprefix bin/,$(LIBRARIES)) bin/$@.o -o out/$@
 
 %.o: %.c $(INCLUDES)
-	@if [ -f $< ]; then \
-		$(CC) $(CFLAGS) -o bin/$@ -c $<; \
-	else \
-		echo "No se puede encontrar el archivo de origen $<"; \
-	fi
+	$(CC) $(CFLAGS) -o bin/$@ -c $<
 
 install:
 	mkdir -p bin/ out/

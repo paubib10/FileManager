@@ -1,4 +1,8 @@
 #include "bloques.h"
+#include "semaforo_mutex_posix.h"
+
+static sem_t *mutex;
+static unsigned int inside_sc = 0;
 
 static int descriptor = 0;
 
@@ -10,6 +14,14 @@ int bmount(const char* camino) {
     if ((descriptor = open(camino, O_RDWR | O_CREAT, 0666)) == -1) {
         perror("Error");
         return FALLO;
+    }
+
+    if(!mutex) {
+        mutex = initSem();
+        if (mutex == SEM_FAILED) {
+            return FALLO;
+        }
+        
     }
 
     // Assign descriptor and return
@@ -24,6 +36,8 @@ int bumount() {
         perror("Error");
         return FALLO;
     }
+    
+    deleteSem();
 
     return res;
 }
@@ -66,5 +80,19 @@ int bread(unsigned int nbloque, void *buf) {
     }
 
     return (int) res;
+}
+
+void mi_waitSem() {
+    if (!inside_sc) { // inside_sc==0, no se ha hecho ya un wait
+        waitSem(mutex);
+    }
+    inside_sc++;
+}
+
+void mi_signalSem() {
+    inside_sc--;
+    if (!inside_sc) {
+        signalSem(mutex);
+    }
 }
 

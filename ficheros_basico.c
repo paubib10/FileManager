@@ -494,6 +494,7 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
 
     int liberados = 0;
 
+    // Saltar exploración bloques innecesarios: El bucle comienza desde el primerBL, no desde el principio.
     if (inodo->tamEnBytesLog == 0) {
         return 0;
     }
@@ -516,6 +517,7 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
         while (ptr > 0 && nivel_punteros > 0) {
             indice = obtener_indice(nBL, (int) nivel_punteros);
 
+            // Minimizar L/E dispositivo(bread, bwrite): Solo se lee el bloque si es necesario.
             if(indice == 0 || nBL == primerBL) {
                 bread(ptr, bloque_punteros[nivel_punteros - 1]);
                 breads++;
@@ -541,6 +543,7 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
             #endif
             liberados++;
 
+            // Recursividad completa: La función se llama a sí misma de forma recursiva.
             if (nRangoBL == 0) {
                 inodo->punterosDirectos[nBL] = 0;
             } else {
@@ -550,7 +553,9 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
                     indice = indices[nivel_punteros - 1];
                     bloque_punteros[nivel_punteros - 1][indice] = 0;
                     ptr = ptr_nivel[nivel_punteros - 1];
-
+                    
+                    // Compactación algoritmo inodo->hojas (anexo), aunando tratamiento indirectos:
+                    // Los bloques de punteros se liberan si ya no son necesarios
                     if (memcmp(bloque_punteros[nivel_punteros - 1], buf_punteros, BLOCKSIZE) == 0) {
                         liberar_bloque(ptr);
                         #if DEBUG6

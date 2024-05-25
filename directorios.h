@@ -20,27 +20,7 @@ typedef struct {
 typedef struct {
     char camino[TAMNOMBRE * PROFUNDIDAD];
     int p_inodo;
-<<<<<<< HEAD
 } ultimaEntrada_t;
-=======
-};
-typedef union inodo {
-    struct {
-        unsigned char tipo;                     // Tipo ('l':libre, 'd':directorio o 'f':fichero)
-        unsigned char permisos;                 // Permisos (lectura y/o escritura y/o ejecución)
-        unsigned char reservado_alineacion1[6]; // Reservado
-        time_t atime;                           // Last data access time
-        time_t mtime;                           // Last modify time
-        time_t ctime;                           // Last inode change time
-        unsigned int nlinks;                    // Cantidad de enlaces de entradas en directorio
-        unsigned int tamEnBytesLog;             // Tamaño en bytes lógicos (EOF)
-        unsigned int numBloquesOcupados;        // Cantidad de bloques ocupados zona de datos
-        unsigned int punterosDirectos[12];      // 12 punteros a bloques directos
-        unsigned int punterosIndirectos[3];     // 1 simple, 1 doble, 1 triple
-    };
-    char padding[INODOSIZE];
-} inodo_t;
->>>>>>> db3cda11c9bdb603698c05d20831f34d8f2fb67a
 
 // Error symbols
 #define ERROR_CAMINO_INCORRECTO                         (-1)

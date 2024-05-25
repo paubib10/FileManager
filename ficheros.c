@@ -2,17 +2,24 @@
 #include "debug.h"
 
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes) {
-    if (nbytes <= 0) return 0;
+    mi_waitSem();
+
+    if (nbytes <= 0) {
+        mi_signalSem();
+        return 0;
+    }
 
     inodo_t inodo;
     // Read and check inode permissions
     if (leer_inodo(ninodo, &inodo) < 0) {
         ERR("mi_write_f", "No se ha podido leer el inodo")
+        mi_signalSem();
         return FALLO;
     }
 
     if((inodo.permisos & 2) != 2) {
         fprintf(stderr,RED"Error: No hay permisos de escritura\n"RESET);
+        mi_signalSem();
         return FALLO;
     }
 
@@ -27,30 +34,45 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
     // Translate the logical block to a physical block and check if it exists
     int nbfisico = traducir_bloque_inodo(&inodo, primerBL, 1);
-    if(nbfisico < 0) return FALLO;
+    if(nbfisico < 0) {
+        mi_signalSem();
+        return FALLO;
+    }
 
     // Read the inode content from the disk
-    if(bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+    if(bread(nbfisico, buf_bloque) == FALLO) {
+        mi_signalSem();
+        return FALLO;
+    }
 
     if(primerBL == ultimoBL) {
         // Update the content of the block and save it
         memcpy(buf_bloque + desp1, buf_original, nbytes);
 
-        if(bwrite(nbfisico, buf_bloque) == FALLO) return FALLO;
+        if(bwrite(nbfisico, buf_bloque) == FALLO) {
+            mi_signalSem();
+            return FALLO;
+        }
 
         bytes += nbytes;
     } else {
         memcpy(buf_bloque + desp1, buf_original, BLOCKSIZE - desp1);
 
         int bytesWritten;
-        if((bytesWritten = bwrite(nbfisico, buf_bloque)) == FALLO) return FALLO;
+        if((bytesWritten = bwrite(nbfisico, buf_bloque)) == FALLO) {
+            mi_signalSem();
+            return FALLO;
+        }
 
         bytes += bytesWritten - desp1;
 
         // Read the middle blocks
         for(int i = primerBL + 1; i < ultimoBL; i++) {
             nbfisico = traducir_bloque_inodo(&inodo, i, 1);
-            if(nbfisico == FALLO) return FALLO;
+            if(nbfisico == FALLO) {
+                mi_signalSem();
+                return FALLO;
+            }
 
             // Update the content of the block and save it
             int displacement = (BLOCKSIZE - desp1) + (i - primerBL - 1) * BLOCKSIZE;
@@ -59,9 +81,15 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
         // Read the last block
         nbfisico = traducir_bloque_inodo(&inodo, ultimoBL, 1);
-        if (nbfisico == FALLO) return FALLO;
+        if (nbfisico == FALLO) {
+            mi_signalSem();
+            return FALLO;
+        }
 
-        if(bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+        if(bread(nbfisico, buf_bloque) == FALLO) {
+            mi_signalSem();
+            return FALLO;
+        }
 
         memcpy(
                 buf_bloque,
@@ -69,7 +97,10 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
                 desp2 + 1
         );
 
-        if (bwrite(nbfisico, buf_bloque) == FALLO) return FALLO;
+        if (bwrite(nbfisico, buf_bloque) == FALLO) {
+            mi_signalSem();
+            return FALLO;
+        }
 
         bytes += desp2 + 1;
     }
@@ -83,15 +114,20 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
     if (escribir_inodo(ninodo, &inodo) == FALLO) {
         ERR("mi_write_f", "No se ha podido escribir el inodo");
+        mi_signalSem();
         return FALLO;
     }
 
+    mi_signalSem();
     return (int) bytes;
 }
 
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes) {
-    if (nbytes <= 0) return 0;
-
+    
+    if (nbytes <= 0) {
+        mi_signalSem();
+        return 0;
+    }
     int bfisico;
     int bytesRead = 0;
     unsigned char auxBuff[BLOCKSIZE];
@@ -99,12 +135,14 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     inodo_t inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO) {
         ERR("mi_read_f", "No se ha podido leer el inodo")
+        mi_signalSem();
         return FALLO;
     }
 
     // Check R permissions
     if ((inodo.permisos & 4) != 4) {
         ERR("mi_read_f", "Error: no hay permisos de lectura")
+        mi_signalSem();
         return FALLO;
     }
 
@@ -124,16 +162,24 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     if(primerBloqueL == ultimoBloqueL) {
         if(bfisico != FALLO) {
-            if(bread(bfisico, auxBuff) == FALLO) return FALLO;
+            if(bread(bfisico, auxBuff) == FALLO) {
+                mi_signalSem();
+                return FALLO;
+            }
 
             memcpy(buf_original, auxBuff + desp1, nbytes);
         }
 
         bytesRead += nbytes;
     } else {
+        mi_waitSem();
+
         // Read the first block
         if(bfisico != FALLO) {
-            if (bread(bfisico, auxBuff) == FALLO) return FALLO;
+            if (bread(bfisico, auxBuff) == FALLO) {
+                mi_signalSem();
+                return FALLO;
+            }
             memcpy(buf_original, auxBuff + desp1, BLOCKSIZE - desp1);
         }
 
@@ -144,7 +190,10 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
             bfisico = traducir_bloque_inodo(&inodo, i, 0);
 
             if (bfisico != FALLO) {
-                if (bread(bfisico, auxBuff)==-1) return FALLO;
+                if (bread(bfisico, auxBuff)==-1) {
+                    mi_signalSem();
+                    return FALLO;
+                }
 
                 memcpy(buf_original+bytesRead,auxBuff, BLOCKSIZE);
             }
@@ -155,7 +204,10 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         // Read the last block
         bfisico = traducir_bloque_inodo(&inodo, ultimoBloqueL, 0);
         if (bfisico != -1) {
-            if (bread(bfisico, auxBuff)==-1) return FALLO;
+            if (bread(bfisico, auxBuff)==-1) {
+                mi_signalSem();
+                return FALLO;
+            }
 
             memcpy((buf_original+nbytes)-desp2-1, auxBuff, desp2+1);
         }
@@ -167,9 +219,11 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     inodo.atime = time(NULL);
     if(escribir_inodo(ninodo, &inodo) == FALLO) {
         ERR("mi_read_f", "No se ha podido escribir el inodo")
+        mi_signalSem();
         return FALLO;
     }
 
+    mi_signalSem();
     return bytesRead;
 }
 
