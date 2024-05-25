@@ -21,6 +21,11 @@ typedef struct {
     char camino[TAMNOMBRE * PROFUNDIDAD];
     int p_inodo;
 } ultimaEntrada_t;
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> d5d1384dab3b242d5fd11a1059a2082355146f51
 
 // Error symbols
 #define ERROR_CAMINO_INCORRECTO                         (-1)

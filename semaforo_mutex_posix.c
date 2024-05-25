@@ -1,6 +1,16 @@
+<<<<<<< HEAD
 #include "semaforo_mutex_posix.h"
 
 
+=======
+/* semaforo_mutex_posix.c */
+#include "semaforo_mutex_posix.h"
+
+
+/* Ejemplo de creación e inicialización de semáforos POSIX para MUTEX con "semáforos con nombre" (named) */
+
+
+>>>>>>> d5d1384dab3b242d5fd11a1059a2082355146f51
 sem_t *initSem() {
    /* name debe ser un nombre de caracteres ascii que comienze con "/", p.e. "/mimutex" */
    sem_t *sem;
@@ -26,4 +36,8 @@ void signalSem(sem_t *sem) {
 
 void waitSem(sem_t *sem) {
    sem_wait(sem);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> d5d1384dab3b242d5fd11a1059a2082355146f51
