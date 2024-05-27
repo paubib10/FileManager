@@ -1,5 +1,4 @@
 #include "ficheros.h"
-#include "debug.h"
 
 unsigned offsets[] = { 9000, 209000, 30725000, 409605000, 480000000 };
 

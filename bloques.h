@@ -8,6 +8,7 @@
 #include <unistd.h>   // SEEK_SET, read(), write(), open(), close(), lseek()
 #include <errno.h>    //errno
 #include <string.h>   // strerror()
+#include "debug.h"
 
 #define BLOCKSIZE 1024 // Number of bytes that a page has
 
@@ -46,5 +47,9 @@ int bwrite(unsigned int nbloque, const void *buf);
  * @return the number of bytes read
  */
 int bread(unsigned int nbloque, void *buf);
+
+void mi_waitSem();
+
+void mi_signalSem();
 
 #endif //BLOQUES

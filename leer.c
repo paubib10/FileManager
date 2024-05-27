@@ -1,5 +1,4 @@
 #include "ficheros.h"
-#include "debug.h"
 
 #define tamBuffer 1500
 

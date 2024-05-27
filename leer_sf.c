@@ -1,5 +1,4 @@
 #include "directorios.h"
-#include "debug.h"
 
 #define DEBUGGER2 0 // Debug nivel 2
 #define DEBUGGER3 0 // Debug nivel 3

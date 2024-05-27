@@ -1,6 +1,5 @@
 #include <limits.h>
 #include "ficheros_basico.h"
-#include "debug.h"
 
 int tamMB(unsigned int nbloques) {
     return (nbloques / 8) % BLOCKSIZE != 0 ?

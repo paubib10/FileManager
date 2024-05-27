@@ -1,10 +1,4 @@
 #include "directorios.h"
-#include "debug.h"
-<<<<<<< HEAD
-=======
-#include "ficheros_basico.h"
-#include "semaforo_mutex_posix.h"
->>>>>>> d5d1384dab3b242d5fd11a1059a2082355146f51
 
 ultimaEntrada_t ultimaEntrada[CACHE];
 int MAXCACHE = CACHE;
@@ -209,18 +203,12 @@ int mi_creat(const char *camino, unsigned  char permisos) {
 
     int error;
 
-    mi_waitSem();
-
     if((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 1, permisos)) < 0) {
+        //mostrar_error_buscar_entrada(error);
         mi_signalSem();
         return error;
     }
-<<<<<<< HEAD
     mi_signalSem();
-=======
-    mi_signalSem(); // Salir de la sección crítica
-   
->>>>>>> d5d1384dab3b242d5fd11a1059a2082355146f51
     return EXITO;
 }
 
@@ -384,8 +372,6 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
     int error = 0;
     int esta = 0;
 
-    mi_waitSem();
-
     // Buscar en la caché
     for(int i = 0; i < (MAXCACHE - 1); i++) {
         if(strcmp(camino, ultimaEntrada[i].camino) == 0) {
@@ -403,7 +389,6 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
     if(!esta) {
         error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 4); // 4 -> Permisos de lectura
         if(error < 0) {
-            mi_signalSem();
             return error;
         }
 
@@ -435,11 +420,7 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
     if(bytesEscritos < 0) {
         bytesEscritos = 0;
     }
-<<<<<<< HEAD
 
-=======
-    mi_signalSem();
->>>>>>> d5d1384dab3b242d5fd11a1059a2082355146f51
     return bytesEscritos;
 }
 
@@ -451,8 +432,6 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
     int error = 0;
     int esta = 0;
     int bytesLeidos = 0;
-
-    
 
     // Buscar en la caché
     for(int i = 0; i < (MAXCACHE - 1); i++) {
@@ -469,7 +448,6 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
 
     // Si no está en la caché, buscar la entrada
     if(!esta) {
-        mi_waitSem();
         error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 4);
         if(error < 0) {
             return error;
@@ -497,7 +475,6 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
                 fprintf(stderr,ORANGE"mi_read() -> Actualizamos la caché de lectura\n" RESET);
             #endif
         }
-        mi_signalSem();
     }
 
     // Leer el archivo
@@ -510,17 +487,14 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
 }
 
 int mi_link(const char *camino1, const char *camino2) {
-<<<<<<< HEAD
     mi_waitSem();
 
-=======
->>>>>>> d5d1384dab3b242d5fd11a1059a2082355146f51
     // Variables para almacenar los resultados de buscar_entrada
     unsigned int p_inodo_dir1 = 0, p_inodo1 = 0, p_entrada1 = 0;
     unsigned int p_inodo_dir2 = 0, p_inodo2 = 0, p_entrada2 = 0;
     inodo_t inodo;
     int error;
-    mi_waitSem();
+
     // Buscar la entrada para el camino 1
     error = buscar_entrada(camino1, &p_inodo_dir1, &p_inodo1, &p_entrada1, 0, 4);
     if(error < 0) {
@@ -529,7 +503,6 @@ int mi_link(const char *camino1, const char *camino2) {
         return FALLO;
     }
 
-<<<<<<< HEAD
     if(leer_inodo(p_inodo1, &inodo) < 0) {
         mi_signalSem();
         return FALLO;
@@ -543,13 +516,6 @@ int mi_link(const char *camino1, const char *camino2) {
     if((inodo.permisos & 4) != 4) {
         mi_signalSem();
         return ERROR_PERMISO_LECTURA;
-=======
-    // Leer el inodo y comprobar si es un fichero y si tiene permisos de lectura
-    leer_inodo(p_inodo1, &inodo);
-    if(inodo.tipo != 'f' || (inodo.permisos & 4) != 4) {
-        mi_signalSem();
-        return (inodo.tipo != 'f') ? ERROR_CAMINO_INCORRECTO : ERROR_PERMISO_LECTURA;
->>>>>>> d5d1384dab3b242d5fd11a1059a2082355146f51
     }
 
     // Buscar la entrada para el camino 2
@@ -588,7 +554,6 @@ int mi_link(const char *camino1, const char *camino2) {
         mi_signalSem();
         return FALLO;
     }
-    mi_signalSem();
 
     mi_signalSem();
     return EXITO;
@@ -604,8 +569,6 @@ int mi_unlink(const char *camino) {
     unsigned int p_entrada = 0;
     inodo_t inodo, inodo_dir;
     int error;
-
-    mi_waitSem();
 
     // Buscar la entrada para el camino
     if((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 4)) < 0) {
@@ -662,7 +625,6 @@ int mi_unlink(const char *camino) {
             return FALLO;
         }
     }
-    mi_signalSem();
 
     mi_signalSem();
     return EXITO;

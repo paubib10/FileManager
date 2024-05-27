@@ -1,5 +1,4 @@
 #include "directorios.h"
-#include "debug.h"
 
 int main(int argc, char const *argv[]) {
     // Comprobación de sintaxis
@@ -10,8 +9,8 @@ int main(int argc, char const *argv[]) {
 
     // Procesamiento de opciones
     int longFormat = 0;
-    char *disco;
-    char *ruta;
+    const char *disco;
+    const char *ruta;
 
     if(argc == 4) {
         if(strcmp(argv[1], "-l") != 0) {
