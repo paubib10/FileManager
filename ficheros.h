@@ -16,7 +16,7 @@ typedef union STAT {
         unsigned int numBloquesOcupados;   // Cantidad de bloques ocupados
     };
     char padding[INODOSIZE];
-} stat_t;
+} STAT_t;
 
 /**
  * Write nbytes from the buf_original to the file on the given inode with the specified padding.
@@ -47,7 +47,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
  * @param p_stat pointer to the stat_t structure to store the status
  * @return if the status is retrieved correctly
  */
-int mi_stat_f(unsigned int ninodo, stat_t *p_stat);
+int mi_stat_f(unsigned int ninodo, STAT_t *p_stat);
 
 /**
  * Change the permissions of the file on the given inode.

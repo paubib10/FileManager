@@ -2,8 +2,8 @@ CC=gcc
 CFLAGS=-c -g -Wall -std=gnu99
 LDFLAGS=-pthread
 
-INCLUDES=bloques.h ficheros_basico.h ficheros.h directorios.h semaforo_mutex_posix.h #simulacion.h
-PROGRAMS=mi_mkfs leer_sf escribir leer permitir truncar mi_mkdir mi_chmod mi_ls mi_stat mi_touch mi_link mi_rm mi_escribir mi_cat mi_escribir_varios simulacion mi_rn #verificacion
+INCLUDES=bloques.h ficheros_basico.h ficheros.h directorios.h semaforo_mutex_posix.h #simulacion.h verificacion.h
+PROGRAMS=mi_mkfs leer_sf escribir leer permitir truncar mi_mkdir mi_chmod mi_ls mi_stat mi_touch mi_link mi_rm mi_escribir mi_cat mi_escribir_varios simulacion verificacion mi_rn
 
 # Map the programs and libraries to the sources
 LIBRARIES=$(INCLUDES:.h=.o)

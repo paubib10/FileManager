@@ -345,7 +345,7 @@ int mi_chmod(const char *camino, unsigned char permisos) {
     return EXITO;
 }
 
-int mi_stat(const char *camino, stat_t *p_stat) {
+int mi_stat(const char *camino, STAT_t *p_stat) {
 
     unsigned int p_inodo_dir = 0;
     unsigned int p_inodo = 0;

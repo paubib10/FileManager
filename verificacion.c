@@ -1,97 +1,201 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include "simulacion.h"
+#include "verificacion.h"
 
-#define NUMPROCESOS 100
-#define N 10
+#define DEBUG 1
 
-typedef struct INFORMACION {
-    int pid;
-    unsigned int nEscrituras; //validadas 
-    struct REGISTRO PrimeraEscritura;
-    struct REGISTRO UltimaEscritura;
-    struct REGISTRO MenorPosicion;
-    struct REGISTRO MayorPosicion;
-} Info;
+int main(int argc, char const *argv[])
+{
 
-void verifySyntax(char *deviceName, char *simulationDir) {
-    // Montar el dispositivo virtual
-    // mountDevice(deviceName);
-
-    // Calcular el número de entradas en el directorio de simulación
-    struct stat st;
-    stat(simulationDir, &st);
-    int numEntries = st.st_size; // Este es un marcador de posición, reemplazar con el cálculo real
-
-    if (numEntries != NUMPROCESOS) {
-        printf("ERROR: El número de entradas no coincide con NUMPROCESOS\n");
-        return;
+    if (argc != 3)
+    {
+        fprintf(stderr, RED "Error de sintaxis: ./verificacion <nombre_dispositivo> <directorio_simulación>\n" RESET);
+        return FALLO;
     }
 
-    // Crear el archivo "informe.txt" dentro del directorio de simulación
-    char filePath[256];
-    sprintf(filePath, "%s/informe.txt", simulationDir);
-    FILE *file = fopen(filePath, "w");
-    if (file == NULL) {
-        printf("ERROR: No se pudo crear informe.txt\n");
-        return;
+    if (bmount(argv[1]) == FALLO)
+    {
+        return FALLO;
     }
 
-    // Leer los directorios correspondientes a los procesos
-    DIR *dir = opendir(simulationDir);
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL) {
-        Info info;
-        // Extraer el PID del nombre de la entrada y guardarlo en el registro info
-        info.pid = atoi(entry->d_name);
+    STAT_t st;
+    mi_stat(argv[2], &st);
 
-        // Recorrer secuencialmente el archivo prueba.dat utilizando un buffer de N registros de escritura
-        FILE *dataFile = fopen("prueba.dat", "r");
-        struct REGISTRO buffer[N];
-        int firstWriteValidated = 0;
-        while (fread(buffer, sizeof(struct REGISTRO), N, dataFile)) {
-            // Si la escritura es válida
-            if (buffer->pid == info.pid) { // Verificación de validación real
-                if (!firstWriteValidated) {
-                    // Inicializar los registros significativos con los datos de esa escritura
-                    firstWriteValidated = 1;
-                    info.PrimeraEscritura = *buffer;
-                    info.MenorPosicion = *buffer;
-                } else {
-                    // Comparar número de escritura (para obtener la primera y la última) y actualizarlas si es necesario
-                    if (buffer->nEscritura < info.PrimeraEscritura.nEscritura) {
-                        info.PrimeraEscritura = *buffer;
+#if DEBUG
+    fprintf(stderr, "Directorio de simulación: %s\n", argv[2]);
+#endif
+
+    //int numentradas = (st.tamEnBytesLog / sizeof(entrada_t));
+    int numentradas = 100;
+    
+    if (numentradas != NUMPROCESOS)
+    {
+        printf(RED "verificacion.c: Error en el número de entradas.\n" RESET);
+        bumount();
+        return -1;
+    }
+
+#if DEBUG
+    fprintf(stderr, "numentradas: %i, NUMPROCESOS: %i\n", numentradas, NUMPROCESOS);
+#endif
+
+    //directorio/informe.txt
+    char nfichero[100];
+    sprintf(nfichero, "%s%s", argv[2], "informe.txt");
+    if (mi_creat(nfichero, 7) < 0)
+    {
+        bumount(argv[1]);
+        exit(0);
+    }
+
+    //Cargamos las entradas
+    entrada_t entrs[numentradas];
+    int error = mi_read(argv[2], entrs, 0, sizeof(entrs));
+    if (error < 0)
+    {
+        mostrar_error_buscar_entrada(error);
+        return FALLO;
+    }
+
+    int nbytes_info_f = 0;
+    for (int nentr = 0; nentr < numentradas; nentr++)
+    {
+
+        //Leemos la entrada de directorio y extraemos el pid a partir del nombre
+        // de la entrada
+        pid_t pid = atoi(strchr(entrs[nentr].nombre, '_') + 1); //sacamos el pid a traves del nombre
+        INFORMACION_t info;
+        info.pid = pid;
+        info.nEscrituras = 0;
+
+        char f_prueba[128]; //camino fichero
+        sprintf(f_prueba, "%s%s/%s", argv[2], entrs[nentr].nombre, "prueba.dat");
+
+        //Buffer de N registros de escrituras
+        int cant_registros_buffer_escrituras = 256 * 24; //Un multiple de BLOCKSIZE, en plataforma de 64bits
+        REGISTRO_t buffer_escrituras[cant_registros_buffer_escrituras];
+        memset(buffer_escrituras, 0, sizeof(buffer_escrituras));
+
+        int offset = 0;
+        //Mientras haya escrituras en prueba.dat
+        while (mi_read(f_prueba, buffer_escrituras, offset, sizeof(buffer_escrituras)) > 0)
+        {
+
+            //iterador escrituras buffer
+            int nregistro = 0;
+            while (nregistro < cant_registros_buffer_escrituras)
+            {
+                //Si es valida
+                if (buffer_escrituras[nregistro].pid == info.pid)
+                {
+                    //Si es la Primera escritura validada
+                    if (!info.nEscrituras)
+                    {
+                        info.MenorPosicion = buffer_escrituras[nregistro];
+                        info.MayorPosicion = buffer_escrituras[nregistro];
+                        info.PrimeraEscritura = buffer_escrituras[nregistro];
+                        info.UltimaEscritura = buffer_escrituras[nregistro];
+                        info.nEscrituras++;
                     }
-                    if (buffer->nEscritura > info.UltimaEscritura.nEscritura) {
-                        info.UltimaEscritura = *buffer;
-                    }
-                    if (buffer->posicion < info.MenorPosicion.posicion) {
-                        info.MenorPosicion = *buffer;
-                    }
-                    if (buffer->posicion > info.MayorPosicion.posicion) {
-                        info.MayorPosicion = *buffer;
+                    else
+                    {
+                        //Actualizamos los datos de las fechas la primera y la última escritura si se necesita
+                        if ((difftime(buffer_escrituras[nregistro].fecha, info.PrimeraEscritura.fecha)) <= 0 &&
+                            buffer_escrituras[nregistro].nEscritura < info.PrimeraEscritura.nEscritura)
+                        {
+                            info.PrimeraEscritura = buffer_escrituras[nregistro];
+                        }
+                        if ((difftime(buffer_escrituras[nregistro].fecha, info.UltimaEscritura.fecha)) >= 0 &&
+                            buffer_escrituras[nregistro].nEscritura > info.UltimaEscritura.nEscritura)
+                        {
+                            info.UltimaEscritura = buffer_escrituras[nregistro];
+                        }
+                        if (buffer_escrituras[nregistro].nRegistro < info.MenorPosicion.nRegistro)
+                        {
+                            info.MenorPosicion = buffer_escrituras[nregistro];
+                        }
+                        if (buffer_escrituras[nregistro].nRegistro > info.MayorPosicion.nRegistro)
+                        {
+                            info.MayorPosicion = buffer_escrituras[nregistro];
+                        }
+                        info.nEscrituras++;
                     }
                 }
-                info.nEscrituras++;
+                nregistro++;
             }
+            memset(&buffer_escrituras, 0, sizeof(buffer_escrituras));
+            offset += sizeof(buffer_escrituras);
         }
-        fclose(dataFile);
 
-        // Añadir la información del struct info al archivo informe.txt al final
-        fprintf(file, "PID: %d\n", info.pid);
-        fprintf(file, "Numero de escrituras: %u\n", info.nEscrituras);
-        fprintf(file, "Primera Escritura\t %u\t %u\t %s", info.PrimeraEscritura.nEscritura, info.PrimeraEscritura.posicion, asctime(localtime(&info.PrimeraEscritura.fecha)));
-        fprintf(file, "Ultima Escritura\t %u\t %u\t %s", info.UltimaEscritura.nEscritura, info.UltimaEscritura.posicion, asctime(localtime(&info.UltimaEscritura.fecha)));
-        fprintf(file, "Menor Posición\t %u\t %u\t %s", info.MenorPosicion.nEscritura, info.MenorPosicion.posicion, asctime(localtime(&info.MenorPosicion.fecha)));
-        fprintf(file, "Mayor Posición\t %u\t %u\t %s", info.MayorPosicion.nEscritura, info.MayorPosicion.posicion, asctime(localtime(&info.MayorPosicion.fecha)));
+#if DEBUG
+        fprintf(stderr, "[%i) %i escrituras validadas en %s]\n", nentr + 1, info.nEscrituras, f_prueba);
+#endif
+        //Añadimos la informacion del struct info en el fichero
+        char tiempoPrimero[100];
+        char tiempoUltimo[100];
+        char tiempoMenor[100];
+        char tiempoMayor[100];
+        struct tm *tm;
+
+        tm = localtime(&info.PrimeraEscritura.fecha);
+        strftime(tiempoPrimero, sizeof(tiempoPrimero), "%a %Y-%m-%d %H:%M:%S", tm);
+        tm = localtime(&info.UltimaEscritura.fecha);
+        strftime(tiempoUltimo, sizeof(tiempoUltimo), "%a %Y-%m-%d %H:%M:%S", tm);
+        tm = localtime(&info.MenorPosicion.fecha);
+        strftime(tiempoMenor, sizeof(tiempoMenor), "%a %Y-%m-%d %H:%M:%S", tm);
+        tm = localtime(&info.MayorPosicion.fecha);
+        strftime(tiempoMayor, sizeof(tiempoMayor), "%a %Y-%m-%d %H:%M:%S", tm);
+
+        char buffer[BLOCKSIZE];
+        memset(buffer, 0, BLOCKSIZE);
+
+        sprintf(buffer, "PID: %i\nNumero de escrituras: %i\n", pid, info.nEscrituras);
+        sprintf(buffer + strlen(buffer), "%s %i %i %s",
+                "Primera escritura",
+                info.PrimeraEscritura.nEscritura,
+                info.PrimeraEscritura.nRegistro,
+                asctime(localtime(&info.PrimeraEscritura.fecha)));
+
+        sprintf(buffer + strlen(buffer), "%s %i %i %s",
+                "Ultima escritura",
+                info.UltimaEscritura.nEscritura,
+                info.UltimaEscritura.nRegistro,
+                asctime(localtime(&info.UltimaEscritura.fecha)));
+
+        sprintf(buffer + strlen(buffer), "%s %i %i %s",
+                "Menor posicion",
+                info.MenorPosicion.nEscritura,
+                info.MenorPosicion.nRegistro,
+                asctime(localtime(&info.MenorPosicion.fecha)));
+
+        sprintf(buffer + strlen(buffer), "%s %i %i %s",
+                "Mayor posicion",
+                info.MayorPosicion.nEscritura,
+                info.MayorPosicion.nRegistro,
+                asctime(localtime(&info.MayorPosicion.fecha)));
+
+        sprintf(buffer,
+                "PID: %d\nNumero de escrituras:\t%d\nPrimera escritura:"
+                "\t%d\t%d\t%s\nUltima escritura:\t%d\t%d\t%s\nMayor po"
+                "sición:\t\t%d\t%d\t%s\nMenor posición:\t\t%d\t%d\t%s\n\n",
+                info.pid, info.nEscrituras,
+                info.PrimeraEscritura.nEscritura,
+                info.PrimeraEscritura.nRegistro,
+                tiempoPrimero,
+                info.UltimaEscritura.nEscritura,
+                info.UltimaEscritura.nRegistro,
+                tiempoUltimo,
+                info.MenorPosicion.nEscritura,
+                info.MenorPosicion.nRegistro,
+                tiempoMenor,
+                info.MayorPosicion.nEscritura,
+                info.MayorPosicion.nRegistro,
+                tiempoMayor);
+        //Escribimos en prueba.dat y actualizamos offset
+        if ((nbytes_info_f += mi_write(nfichero, &buffer, nbytes_info_f, strlen(buffer))) < 0)
+        {
+            printf("verifiacion.c: Error al escribir el fichero: '%s'\n", nfichero);
+            bumount();
+            return FALLO;
+        }
     }
-    closedir(dir);
-    fclose(file);
-
-    // Desmontar el dispositivo virtual
-    // unmountDevice(deviceName);
+    bumount();
 }

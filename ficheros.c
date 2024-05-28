@@ -226,7 +226,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     return bytesRead;
 }
 
-int mi_stat_f(unsigned int ninodo, stat_t *p_stat) {
+int mi_stat_f(unsigned int ninodo, STAT_t *p_stat) {
     inodo_t inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO ) return FALLO;
 

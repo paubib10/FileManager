@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     }
 
     // Get the stats of the file
-    stat_t stat;
+    STAT_t stat;
     if (mi_stat_f(ninodo, &stat) == FALLO) {
         ERR("truncar", "Error al obtener el stat del inodo %d\n", ninodo)
         return EXIT_FAILURE;

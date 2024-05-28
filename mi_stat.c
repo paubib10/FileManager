@@ -13,7 +13,7 @@ int main(int argc, char const *argv[]) {
     }
 
     // Obtención de estadísticas y comprobación de errores
-    stat_t p_stat;
+    STAT_t p_stat;
     int p_inodo = mi_stat(argv[2], &p_stat);
     if(p_inodo < 0) {
         mostrar_error_buscar_entrada(p_inodo);
