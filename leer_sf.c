@@ -1,3 +1,4 @@
+//AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #include "directorios.h"
 
 #define DEBUGGER2 0 // Debug nivel 2

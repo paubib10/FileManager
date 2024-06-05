@@ -1,3 +1,4 @@
+//AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #ifndef DIRECTORIOS
 #define DIRECTORIOS
 
