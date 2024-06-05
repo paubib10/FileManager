@@ -161,7 +161,7 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos);
  * @param ptr pointer to the start of the range
  * @return the range
  */
-int obtener_nrangoBL(inodo_t inodo, unsigned int nblogico, unsigned int *ptr);
+int obtener_nrangoBL(inodo_t inodo, unsigned int nblogico, unsigned int* ptr);
 
 /**
  * Get the index of the block in the inode.
@@ -181,13 +181,14 @@ int obtener_indice(unsigned int nblogico, int nivel_punteros);
  * @param reservar flag to reserve the block
  * @return the physical block number
  */
-int traducir_bloque_inodo(inodo_t *inodo, unsigned int nblogico, unsigned char reservar);
+int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned char reservar);
+
 
 /**
  * Free an inode and append it on the head of free inodes list.
  *
  * @param ninodo inode to free
- * @return if success
+ * @return if success   
  */
 int liberar_inodo(unsigned int ninodo);
 

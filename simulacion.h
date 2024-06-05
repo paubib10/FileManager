@@ -6,7 +6,6 @@
 #define NUMESCRITURAS 50
 #define REGMAX 500000
 
-
 typedef struct { // sizeof(REGISTRO_t): 24 bytes
     time_t fecha; // Precisión de segundos
     pid_t pid; // PID del proceso que lo ha creado

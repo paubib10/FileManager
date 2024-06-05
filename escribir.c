@@ -61,7 +61,7 @@ void write_inode(unsigned int inodo, int offset, char* txt) {
 }
 
 void print_stat(unsigned int inodo, int res) {
-    stat_t stat;
+    STAT_t stat;
     mi_stat_f(inodo, &stat);
 
     printf("Bytes escritos: %d\n"

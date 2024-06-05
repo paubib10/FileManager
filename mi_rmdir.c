@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     }
 
     // Comprobar si el camino proporcionado corresponde a un directorio
-    stat_t stat;
+    STAT_t stat;
     if(mi_stat(argv[2], &stat) < 0) {
         fprintf(stderr,RED"Error: No existe el archivo o el directorio.\n"RESET);
         return FALLO;

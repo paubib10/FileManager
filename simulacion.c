@@ -14,7 +14,6 @@ void reaper() {
 }
 
 int main(int argc, char const *argv[]) {
-
     // Comprobamos sintaxis
     if (argc != 2) {
         fprintf(stderr,RED"Sintaxis: ./simulacion <disco>\n");
@@ -57,6 +56,7 @@ int main(int argc, char const *argv[]) {
             // Creamos directorio del proceso hijo
             char nombreDirectorio[38];
             sprintf(nombreDirectorio, "%sproceso_%d/", camino, getpid());
+
             if(mi_creat(nombreDirectorio, 6) == -1) {
                 fprintf(stderr,RED"Error al crear el directorio del proceso\n"RESET);
                 exit(0);
@@ -65,6 +65,7 @@ int main(int argc, char const *argv[]) {
             // Creamos el fichero prueba.dat
             char nombreFichero[48];
             sprintf(nombreFichero, "%sprueba.dat", nombreDirectorio);
+
             if(mi_creat(nombreFichero, 6) == -1) {
                 fprintf(stderr,RED"Error al crear el fichero prueba.dat del proceso\n"RESET);
                 bumount();
@@ -75,7 +76,6 @@ int main(int argc, char const *argv[]) {
             srand(time(NULL) + getpid());
 
             for(int nescritura = 0; nescritura < NUMESCRITURAS; nescritura++) {
-
                 // Inicializamos el registro
                 REGISTRO_t registro;
                 registro.fecha = time(NULL);
@@ -93,7 +93,7 @@ int main(int argc, char const *argv[]) {
             }
 
             #if DEBUG12
-                fprintf(stderr, "[Proceso %d: Completadas %d escrituras en %s]\n", proceso, NUMESCRITURAS, nombreFichero);
+                fprintf(stderr,GRAY"[Proceso %d: Completadas %d escrituras en %s]\n"RESET, proceso, NUMESCRITURAS, nombreFichero);
             #endif
 
             // Desmontamos el dispositivo hijo

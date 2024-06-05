@@ -28,6 +28,7 @@
 #define DEBUG7 0 // Debug level 7
 #define DEBUG9 0 // Debug level 9
 #define DEBUG12 1 // simulacion.c
+#define DEBUG13 1 // verificacion.c
 
 // Debug methods
 #define DEBUG(method, msg, ...) ( \
