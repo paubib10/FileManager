@@ -184,7 +184,10 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     return (nbytes == leidos) ? leidos : FALLO;
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0f41a49a4db81b553f14d3363437c0c85599b158
 int mi_stat_f(unsigned int ninodo, STAT_t *p_stat) {
     inodo_t inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO ) return FALLO;

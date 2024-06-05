@@ -40,7 +40,7 @@ int main(int argc, char const *argv[]) {
 
     fprintf(stderr, "*** SIMULACION DE %i PROCESOS REALIZANDO CADA UNO %i ESCRITURAS ***\n", NUMPROCESOS, NUMESCRITURAS);
 
-    // Asociamos la señal SIGCHLD al manejador enterrador
+    // Asociamos la seÃ±al SIGCHLD al manejador enterrador
     signal(SIGCHLD, reaper);
 
     pid_t pid;
@@ -83,7 +83,7 @@ int main(int argc, char const *argv[]) {
                 registro.nEscritura = nescritura + 1;
                 registro.nRegistro = rand() % REGMAX; // [0, 499.999]
 
-                mi_write(nombreFichero, &registro, registro.nRegistro * sizeof(REGISTRO_t), sizeof(REGISTRO_t));
+                mi_write(nombreFichero, &registro, (registro.nRegistro * sizeof(REGISTRO_t)), sizeof(REGISTRO_t));
 
                 #if DEBUGON
                     fprintf(stderr, "[simulacion.c -> Escritura %i en %s]\n", nescritura + 1, nombreFichero);
