@@ -1,10 +1,8 @@
-// AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #ifndef FICHEROS
 #define FICHEROS
 
 #include "ficheros_basico.h"
 
-// Definición de la estructura STAT
 typedef union STAT {
     struct {
         unsigned char tipo;                // Tipo ('l':libre, 'd':directorio o 'f':fichero)
@@ -21,53 +19,52 @@ typedef union STAT {
 } STAT_t;
 
 /**
- * Escribe nbytes desde buf_original en el fichero del inodo especificado con el desplazamiento indicado.
+ * Write nbytes from the buf_original to the file on the given inode with the specified padding.
  *
- * @param ninodo Número del inodo
- * @param buf_original Buffer con los datos a escribir
- * @param offset Desplazamiento en el fichero
- * @param nbytes Número de bytes a escribir
- * @return Número de bytes escritos
+ * @param ninodo inode number start
+ * @param buf_original buffer with the data to write
+ * @param offset offset in the file
+ * @param nbytes number of bytes to write
+ * @return number of bytes written
  */
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes);
 
 /**
- * Lee nbytes del fichero del inodo especificado en buf_original con el desplazamiento indicado.
+ * Read nbytes from the file on the given inode to the buf_original with the specified padding.
  *
- * @param ninodo Número del inodo
- * @param buf_original Buffer para almacenar los datos leídos
- * @param offset Desplazamiento en el fichero
- * @param nbytes Número de bytes a leer
- * @return Número de bytes leídos
+ * @param ninodo inode number start
+ * @param buf_original buffer to store the data
+ * @param offset offset in the file
+ * @param nbytes number of bytes to read
+ * @return number of bytes read
  */
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes);
 
 /**
- * Obtiene el estado del fichero en el inodo especificado.
+ * Get the status of the file on the given inode.
  *
- * @param ninodo Número del inodo
- * @param p_stat Puntero a la estructura STAT_t para almacenar el estado
- * @return Si el estado se obtiene correctamente
+ * @param ninodo inode number
+ * @param p_stat pointer to the stat_t structure to store the status
+ * @return if the status is retrieved correctly
  */
 int mi_stat_f(unsigned int ninodo, STAT_t *p_stat);
 
 /**
- * Cambia los permisos del fichero en el inodo especificado.
+ * Change the permissions of the file on the given inode.
  *
- * @param ninodo Número del inodo
- * @param permisos Nuevos permisos
- * @return Si los permisos se cambian correctamente
+ * @param ninodo inode number
+ * @param permisos new permissions
+ * @return if the permissions are changed correctly
  */
 int mi_chmod_f(unsigned int ninodo, unsigned char permisos);
 
 /**
- * Trunca el fichero en el inodo especificado al número de bytes indicado.
- * Liberará los bloques necesarios y actualizará el inodo.
+ * Truncate the file on the given inode to the specified number of bytes.
+ * It will free the needed blocks and update the inode.
  *
- * @param ninodo Número del inodo
- * @param nbytes Número de bytes
- * @return Si el truncado se realiza correctamente
+ * @param ninodo inode number
+ * @param nbytes number of bytes
  */
 int mi_truncar_f(unsigned int ninodo, unsigned int nbytes);
 
-#endif // FICHEROS
+#endif //FICHEROS

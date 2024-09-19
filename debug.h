@@ -1,4 +1,3 @@
-//AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #ifndef FILEMANAGER_DEBUG_H
 #define FILEMANAGER_DEBUG_H
 

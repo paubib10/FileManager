@@ -1,4 +1,3 @@
-//AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #include "ficheros.h"
 
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes){

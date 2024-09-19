@@ -1,9 +1,8 @@
-// AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #include "verificacion.h"
 
 int main(int argc, char const *argv[])
 {
-    // Comprobamos la sintaxis
+    // Comprobamos sintaxis
     if (argc != 3)
     {
         fprintf(stderr, RED "Sintaxis: ./verificacion <nombre_dispositivo> <directorio_simulacion>\n" RESET);
@@ -14,7 +13,7 @@ int main(int argc, char const *argv[])
     if (bmount(argv[1]) == -1)
         return FALLO;
 
-    // Calculamos el número de entradas del directorio de simulación
+    // Calculamos el nº de entradas del directorio de simulación
     STAT_t stat;
     mi_stat(argv[2], &stat);
 
@@ -24,7 +23,7 @@ int main(int argc, char const *argv[])
 
     if (numEntradas != NUMPROCESOS)
     {
-        fprintf(stderr, RED "Error en el número de entradas (%i).\n" RESET, numEntradas);
+        fprintf(stderr, RED "Error en el nº de entradas (%i).\n" RESET, numEntradas);
 
         // Desmontamos el dispositivo
         if (bumount() == -1)
@@ -46,6 +45,7 @@ int main(int argc, char const *argv[])
     // Leemos los directorios correspondientes a cada proceso
     // MEJORA REALIZADA: Leemos todas las entradas al principio del bucle
     entrada_t entradas[numEntradas];
+    // memset(entradas, 0, sizeof(entradas));
 
     int error = mi_read(argv[2], &entradas, 0, sizeof(entradas));
     if (error < 0)
@@ -71,10 +71,12 @@ int main(int argc, char const *argv[])
         // Recorremos secuencialmente el fichero prueba.dat utilizando buffer de N registros de escrituras
         int cant_registros_buffer_escrituras = 256;
         REGISTRO_t buffer_escrituras[cant_registros_buffer_escrituras];
+        // memset(buffer_escrituras, 0, sizeof(buffer_escrituras));
 
         int offset = 0;
         while (mi_read(buffer_fichero, buffer_escrituras, offset, sizeof(buffer_escrituras)) > 0)
         {
+
             int registro_validadas = 0;
 
             while (registro_validadas < cant_registros_buffer_escrituras)

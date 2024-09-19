@@ -1,4 +1,3 @@
-//AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #include "simulacion.h"
 
 #define DEBUGON 0

@@ -1,4 +1,3 @@
-//AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #include "semaforo_mutex_posix.h"
 
 

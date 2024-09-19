@@ -1,4 +1,3 @@
-//AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #include "ficheros.h"
 
 unsigned offsets[] = { 9000, 209000, 30725000, 409605000, 480000000 };

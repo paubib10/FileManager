@@ -1,39 +1,34 @@
-// AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #include "ficheros.h"
 
 int main(int argc, char** argv) {
-    // Comprobamos la sintaxis
     if (argc != 4) {
         ERR("permitir", "Error sintaxis: ./permitir <nombre_dispositivo> <nº de inodo> <permiso>\n")
         return EXIT_FAILURE;
     }
 
-    // Extraemos los argumentos
+    // Retrieve arguments
     char* fileName = argv[1];
     int nInode = (int) strtol(argv[2], NULL, 10);
     int permission = (int) strtol(argv[3], NULL, 10) & 0x07;
 
-    // Comprobamos que el número de inodo sea válido
     if (nInode <= 0) {
-        ERR("permitir", "Número de inodo no válido\n")
+        ERR("permitir", "Invalid inode number\n")
         return EXIT_FAILURE;
     }
 
-    // Montamos el dispositivo
     if (bmount(fileName) == FALLO) {
-        ERR("permitir", "Error al montar el dispositivo\n")
+        ERR("permitir", "Error mounting the device\n")
         return EXIT_FAILURE;
     }
 
-    // Cambiamos los permisos del inodo
     if (mi_chmod_f(nInode, permission) == FALLO) {
-        ERR("permitir", "Error al cambiar los permisos del inodo\n")
+        ERR("permitir", "Error changing the inode permissions\n")
         return EXIT_FAILURE;
     }
 
-    // Desmontamos el dispositivo
+    // Unmount the device
     if (bumount() == FALLO) {
-        ERR("permitir", "Error al desmontar el dispositivo\n")
+        ERR("permitir", "Error unmounting the device\n")
         return EXIT_FAILURE;
     }
 

@@ -1,8 +1,14 @@
-//AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #include <limits.h>
 #include "ficheros_basico.h"
 
+//Hecho por Alexandre Hierro Pedrosa, Carlos Larruscain Monar y Jaume Ribas Gayá
+#include "ficheros_basico.h"
 
+/**
+ * Función que calcula el tamaño en bloques necesarios para el mapa de bits
+ * Recibe: El numero de bloques del dispositivo
+ * Devuelve: La cantidad de bloques necesarios para el mapa de bits
+*/
 int tamMB(unsigned int nbloques) {
     return (nbloques / 8) % BLOCKSIZE != 0 ?
     ((int)nbloques / 8) / BLOCKSIZE + 1 :
@@ -15,6 +21,11 @@ int tamAI(unsigned int ninodos) {
     ((int)ninodos * INODOSIZE) / BLOCKSIZE;
 }
 
+/**
+ * Función que inicializa los datos del superbloque
+ * Recibe: La cantidad de bloques del dispositivo, numero de inodos del dispositivo
+ * Devuelve: 0 si todo va bien. En caso de error devuelve -1
+*/
 int initSB(unsigned int nbloques, unsigned int ninodos) {
     superbloque_t sb = {{
         posSB + tamSB,
@@ -38,6 +49,7 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
 
 
 
+// TODO: Se podria usar un memset de 1Kb para la pagina y luego comprobar si se necesitan mas bloques
 int initMB() {
     // Leemos el superbloque
     superbloque_t sb;
@@ -346,7 +358,7 @@ int obtener_nRangoBL(inodo_t *inodo,unsigned int nblogico,unsigned int *ptr){
     }
 }
 
-
+// TODO: Can remove else if and use if
 int obtener_indice(unsigned int nblogico, int nivel_punteros) {
     if(nblogico < DIRECTOS) return (int) nblogico;
     else if (nblogico < INDIRECTOS0) return (int) nblogico - DIRECTOS;

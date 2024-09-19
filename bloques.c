@@ -1,100 +1,101 @@
-// AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #include "bloques.h"
 #include "semaforo_mutex_posix.h"
 
-static sem_t *mutex; // Declaración de un puntero a un semáforo
-static unsigned int inside_sc = 0; // Contador para controlar la entrada en la sección crítica
+static sem_t *mutex;
+static unsigned int inside_sc = 0;
 
-static int descriptor = 0; // Descriptor de archivo
+static int descriptor = 0;
 
 int bmount(const char* camino) {
     
     if(descriptor > 0) {
-        close(descriptor); // Cierra el descriptor si ya está abierto
+        close(descriptor);
     }
 
-    umask(000); // Establece los permisos del archivo
+    umask(000);
 
-    // Abre el archivo
+    // Open the file
     descriptor = open(camino, O_RDWR | O_CREAT, 0666);
 
     if(!mutex) { 
-        mutex = initSem(); // Inicializa el semáforo
+        mutex = initSem();
         if (mutex == SEM_FAILED) {
-            return FALLO; // Error en la inicialización del semáforo
+            return FALLO;
         }
+        
     }
 
-    // Asigna el descriptor y lo retorna
+    // Assign descriptor and return
     return descriptor;
 }
 
 int bumount() {
 
-    descriptor = close(descriptor); // Cierra el descriptor
+    descriptor = close(descriptor);
 
     // Comprobamos si se ha cerrado correctamente
     if (close(descriptor) == -1) {
         fprintf(stderr, "Error al cerrar el fichero.\n");
-        return FALLO; // Error al cerrar el archivo
+        return FALLO;
     }
     
-    deleteSem(); // Elimina el semáforo
+    deleteSem();
     
     // Se ha cerrado correctamente
     return EXITO;
 }
 
 int bwrite(unsigned int nbloque, const void *buf) {
-    // Mueve el puntero del archivo al bloque
+    // Move the file pointer to the block
     off_t res = lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET);
 
     if (res == -1) {
-        perror("Error"); // Error en el movimiento del puntero
+        perror("Error");
         return FALLO;
     }
 
-    // Escribe el bloque
+    // Write the block
     res = write(descriptor, buf, BLOCKSIZE);
 
     if (res == -1) {
-        perror("Error"); // Error en la escritura del bloque
+        perror("Error");
         return FALLO;
     }
 
-    return (int) res; // Retorna el número de bytes escritos
+    return (int) res;
 }
 
 int bread(unsigned int nbloque, void *buf) {
-    // Mueve el puntero del archivo al bloque
+    // Move the file pointer to the block
     off_t res = lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET);
 
     if (res == -1) {
-        perror("Error"); // Error en el movimiento del puntero
+        perror("Error");
         return FALLO;
     }
 
-    // Lee el bloque
+    // Read the block
     res = read(descriptor, buf, BLOCKSIZE);
 
     if (res == -1) {
-        perror("Error"); // Error en la lectura del bloque
+        perror("Error");
         return FALLO;
     }
 
-    return (int) res; // Retorna el número de bytes leídos
+    return (int) res;
 }
 
 void mi_waitSem() {
-    if (!inside_sc) { // inside_sc == 0, no se ha hecho ya un wait
-        waitSem(mutex); // Espera el semáforo
+    if (!inside_sc) { // inside_sc==0, no se ha hecho ya un wait
+        waitSem(mutex);
     }
-    inside_sc++; // Incrementa el contador de la sección crítica
+    inside_sc++;
 }
 
 void mi_signalSem() {
-    inside_sc--; // Decrementa el contador de la sección crítica
+    inside_sc--;
     if (!inside_sc) {
-        signalSem(mutex); // Señaliza el semáforo
+        signalSem(mutex);
     }
 }
+

@@ -1,4 +1,3 @@
-//AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #ifndef SEMAFORO_MUTEX_POSIX
 #define SEMAFORO_MUTEX_POSIX
 

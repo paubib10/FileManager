@@ -1,4 +1,3 @@
-//AUTORES: Pau Toni Bibiloni Martínez y Finn Maria Dicke Sabel
 #ifndef FICHEROS_BASICO
 #define FICHEROS_BASICO
 
